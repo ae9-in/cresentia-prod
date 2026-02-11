@@ -49,6 +49,30 @@ const makeCourse = (category, level, title, description, createdBy, quizQuestion
   createdBy
 });
 
+const shuffleArray = (array) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+const generateUniqueQuiz = (baseQuiz) => {
+  // Select 3 random questions from the base quiz pool
+  const selectedQuestions = shuffleArray(baseQuiz).slice(0, 3);
+  return selectedQuestions.map((question) => {
+    const shuffledOptions = shuffleArray(question.options);
+    const correctOption = question.options[question.correctAnswer];
+    const newCorrectAnswer = shuffledOptions.indexOf(correctOption);
+    return {
+      question: question.question,
+      options: shuffledOptions,
+      correctAnswer: newCorrectAnswer
+    };
+  });
+};
+
 const courseSeed = (instructorId) => {
   const itQuiz = [
     {
@@ -182,7 +206,7 @@ const courseSeed = (instructorId) => {
   ];
 
   return categories.flatMap((cat) =>
-    cat.titles.map((title) => makeCourse(cat.name, cat.level, title, cat.description, instructorId, cat.quiz))
+    cat.titles.map((title) => makeCourse(cat.name, cat.level, title, cat.description, instructorId, generateUniqueQuiz(cat.quiz)))
   );
 };
 
