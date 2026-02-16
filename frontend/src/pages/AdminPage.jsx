@@ -182,7 +182,7 @@ const AdminPage = () => {
           <p className="muted">Uploaded videos are appended to the list below.</p>
         </div>
         <label>
-          Videos (one per line: title | url | durationMinutes) - URL can be YouTube or upload link
+          Videos (one per line: title | url | durationMinutes) - Video URL (Cloudinary or Direct Link)
           <textarea
             value={form.videosText}
             onChange={(e) => setForm({ ...form, videosText: e.target.value })}

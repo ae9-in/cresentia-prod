@@ -6,30 +6,30 @@ const Enrollment = require('../models/Enrollment');
 const connectDB = require('../config/db');
 
 const videoByTitle = {
-  'Full Stack Web Fundamentals': 'https://www.youtube.com/watch?v=7NaeDBTRY1k',
-  'JavaScript for Real Projects': 'https://www.youtube.com/watch?v=lkIFF4maKMU',
-  'API Development with Node': 'https://www.youtube.com/watch?v=-MTSQjw5DrM',
-  'Frontend Performance Boost': 'https://www.youtube.com/watch?v=CaShN6mCJB0',
-  'Database Essentials': 'https://www.youtube.com/watch?v=wR0jg0eQsZA',
-  'Cloud Deployment Basics': 'https://www.youtube.com/watch?v=N0SYCyS2xZA',
-  'Business Analytics Essentials': 'https://www.youtube.com/watch?v=diaZdX1s5L4',
-  'Excel to Dashboard Mastery': 'https://www.youtube.com/watch?v=l5qkg8gzY6E',
-  'Data Storytelling for Leaders': 'https://www.youtube.com/watch?v=r5_34YnCmMY',
-  'Product Metrics Deep Dive': 'https://www.youtube.com/watch?v=N07ncCovXl8',
-  'Forecasting with Confidence': 'https://www.youtube.com/watch?v=6rqhMnOgQnU&t=333s',
-  'Operational KPI Playbook': 'https://www.youtube.com/watch?v=sC0w7FlcnyQ',
-  'High Impact Communication': 'https://www.youtube.com/watch?v=LI57EB_T38c',
-  'Sales Discovery Mastery': 'https://www.youtube.com/watch?v=_DbSgU5naDQ',
-  'Negotiation Confidence': 'https://www.youtube.com/watch?v=Z3HJCQJ2Lmo',
-  'Client Relationship Building': 'https://www.youtube.com/watch?v=sMlczYnSVYo',
-  'Objection Handling Playbook': 'https://www.youtube.com/watch?v=etY48E4SF00',
-  'Pitching with Clarity': 'https://www.youtube.com/watch?v=dkZU_VUEMPI',
-  'Applied Machine Learning Bootcamp': 'https://www.youtube.com/watch?v=Y4qO9unerGs&list=PLao4QLdbxX2eR9LODnk0C6aIrNYzPGqZH',
-  'Model Evaluation Lab': 'https://www.youtube.com/watch?v=IFXRyOM_Bqo',
-  'Feature Engineering Studio': 'https://www.youtube.com/watch?v=Bg3CjiJ67Cc',
-  'Deploying ML Systems': 'https://www.youtube.com/watch?v=mAvyG9OS4uY',
-  'Responsible AI Practices': 'https://www.youtube.com/watch?v=IHsYWHfIe0Y',
-  'Deep Learning Foundations': 'https://www.youtube.com/watch?v=Beh13Cd_QbY'
+  'Full Stack Web Fundamentals': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771233129/How_I_d_Learn_Full-Stack_Web_Development_If_I_Could_Start_Over_-_Conner_Ardman_360p_h264_oifvaq.mp4',
+  'JavaScript for Real Projects': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771234109/100_JavaScript_Concepts_you_Need_to_Know_-_Fireship_360p_h264_rff7ie.mp4',
+  'API Development with Node': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771234189/RESTful_APIs_in_100_Seconds____Build_an_API_from_Scratch_with_Node.js_Express_-_Fireship_360p_h264_hdkypv.mp4',
+  'Frontend Performance Boost': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771234345/The_ultimate_guide_to_web_performance_-_Beyond_Fireship_360p_h264_t3jav7.mp4',
+  'Database Essentials': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771234534/Database_Tutorial_for_Beginners_-_Lucid_Software_360p_h264_ymkuzt.mp4',
+  'Cloud Deployment Basics': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771234655/Cloud_Computing_In_6_Minutes_What_Is_Cloud_Computing_Cloud_Computing_Explained_Simplilearn_-_Simplilearn_360p_h264_i9tucr.mp4',
+  'Business Analytics Essentials': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771234817/Introduction_to_Business_Analytics_Updated_Edition_-_Cody_Baldwin_360p_h264_qh3txy.mp4',
+  'Excel to Dashboard Mastery': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771235142/The_Ultimate_Excel_Dashboard_Visualize_Data_Like_a_Pro_-_Chandoo_360p_h264_cgf4mr.mp4',
+  'Data Storytelling for Leaders': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771235376/Data_Storytelling_Basics_in_3_Steps_How_to_Communicate_Data_and_Numbers_-_Word_Cortex_with_Anita_360p_h264_gjcxil.mp4',
+  'Product Metrics Deep Dive': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771235578/Playbook_-_Product_Metrics_101_-_Playbooks_by_Anshumani_Ruddra_360p_h264_w2y56x.mp4',
+  'Forecasting with Confidence': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771235723/Forecasting_in_Excel_MUST-KNOW_for_Any_Analyst_-_Kenji_Explains_360p_h264_ezk6il.mp4',
+  'Operational KPI Playbook': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771236030/Storytelling_in_PowerPoint_Learn_McKinsey_s_3-Step_Framework_-_Dan_Galletta_360p_h264_pzddzw.mp4',
+  'High Impact Communication': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771236172/The_science_behind_dramatically_better_conversations_Charles_Duhigg_TEDxManchester_-_TEDx_Talks_360p_h264_t9azsb.mp4',
+  'Sales Discovery Mastery': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771236334/How_To_Run_A_Discovery_Call_-_Strategy_Session_-_Patrick_Dang_360p_h264_bnhcet.mp4',
+  'Negotiation Confidence': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771236416/HARVARD_Negotiators_How_to_Get_What_You_Want_Every_Time_Getting_to_Yes_-_LITTLE_BIT_BETTER_360p_h264_qaogyh.mp4',
+  'Client Relationship Building': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771236567/Why_Relationship_Selling_is_SO_Important_-_Simon_Sinek_360p_h264_r64vc4.mp4',
+  'Objection Handling Playbook': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771236696/Universal_Objection_Circle_The_Objection_Playbook_Objection_Handling_Training_Dr_Sanjay_Tolani_-_Dr._Sanjay_Tolani_360p_h264_x9vj5c.mp4',
+  'Pitching with Clarity': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771236849/OFI_-_The_Pitch_List_-_No._1_-_Simplicity_and_Clarity_-_Owen_Fitzpatrick_360p_h264_jn5t0c.mp4',
+  'Applied Machine Learning Bootcamp': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771236965/Everything_I_Studied_to_Become_a_Machine_Learning_Scientist_at_Amazon_from_ZERO_Tech_Background_-_Marina_Wyss_-_AI_Machine_Learning_360p_h264_ihkvhj.mp4',
+  'Model Evaluation Lab': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771237101/Compare_Model_Performance_using_the_Generative_AI_Evaluation_Service_Challenge_Lab_GENAI063_-_DR_abhishek._360p_h264_qu32ae.mp4',
+  'Feature Engineering Studio': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771237212/Feature_Engineering_for_AI_Transforming_Raw_Data_into_Predictions_-_IBM_Technology_360p_h264_v1y4k7.mp4',
+  'Deploying ML Systems': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771237366/Deploying_a_Machine_Learning_Model_in_3_Minutes_-_Exponent_360p_h264_us479e.mp4',
+  'Responsible AI Practices': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771237465/Responsible_AI_Governance_Ethics_Best_Practices_-_IBM_360p_h264_ylmmqm.mp4',
+  'Deep Learning Foundations': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771237774/Machine_Learning_vs._Deep_Learning_vs._Foundation_Models_-_IBM_Technology_360p_h264_y8ny51.mp4'
 };
 
 const makeCourse = (category, level, title, description, createdBy, quizQuestions) => ({
@@ -39,7 +39,7 @@ const makeCourse = (category, level, title, description, createdBy, quizQuestion
   description,
   videos: [
     {
-      title: `${title} (YouTube)`,
+      title: title,
       url: videoByTitle[title] || '',
       durationMinutes: 30
     }
