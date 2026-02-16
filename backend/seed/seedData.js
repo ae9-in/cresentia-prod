@@ -59,8 +59,9 @@ const shuffleArray = (array) => {
 };
 
 const generateUniqueQuiz = (baseQuiz) => {
-  // Select 3 random questions from the base quiz pool
-  const selectedQuestions = shuffleArray(baseQuiz).slice(0, 3);
+  // Select 10 random questions from the base quiz pool (or fewer if not enough)
+  const count = Math.min(10, baseQuiz.length);
+  const selectedQuestions = shuffleArray(baseQuiz).slice(0, count);
   return selectedQuestions.map((question) => {
     const shuffledOptions = shuffleArray(question.options);
     const correctOption = question.options[question.correctAnswer];
@@ -89,6 +90,41 @@ const courseSeed = (instructorId) => {
       question: 'Which keyword declares a block-scoped variable in JavaScript?',
       options: ['var', 'let', 'const', 'scope'],
       correctAnswer: 1
+    },
+    {
+      question: 'What does DOM stand for?',
+      options: ['Data Object Model', 'Document Object Model', 'Digital Object Main', 'Document Order Model'],
+      correctAnswer: 1
+    },
+    {
+      question: 'Which HTTP method is used to update a resource?',
+      options: ['GET', 'TUP', 'PUT', 'POST'],
+      correctAnswer: 2
+    },
+    {
+      question: 'What is the purpose of npm?',
+      options: ['Network Package Manager', 'Node Project Manager', 'New Package Market', 'Node Package Manager'],
+      correctAnswer: 3
+    },
+    {
+      question: 'Which symbol is used for IDs in CSS?',
+      options: ['.', '#', '*', '!'],
+      correctAnswer: 1
+    },
+    {
+      question: 'What is the result of 2 + "2" in JavaScript?',
+      options: ['4', '22', 'NaN', 'Error'],
+      correctAnswer: 1
+    },
+    {
+      question: 'Which SQL keyword is used to retrieve data?',
+      options: ['INSERT', 'UPDATE', 'DELETE', 'SELECT'],
+      correctAnswer: 3
+    },
+    {
+      question: 'What does JSON stand for?',
+      options: ['Java Standard Object Notation', 'JavaScript Object Notation', 'JavaScript Output Name', 'Java Source Object Network'],
+      correctAnswer: 1
     }
   ];
 
@@ -106,6 +142,41 @@ const courseSeed = (instructorId) => {
     {
       question: 'A dashboard’s main goal is to:',
       options: ['Store raw data', 'Communicate insights', 'Replace databases', 'Hide bad metrics'],
+      correctAnswer: 1
+    },
+    {
+      question: 'What is ROI?',
+      options: ['Rate of Interest', 'Return on Investment', 'Risk of Inflation', 'Return on Income'],
+      correctAnswer: 1
+    },
+    {
+      question: 'SWOT analysis stands for?',
+      options: ['Strengths, Weaknesses, Opportunities, Threats', 'Sales, Work, Organization, Time', 'Strategy, Work, Operations, Tasks', 'Simple, Wide, Open, Tested'],
+      correctAnswer: 0
+    },
+    {
+      question: 'What is a stakeholder?',
+      options: ['A shareholder only', 'Anyone interested in the business', 'The CEO', 'A customer only'],
+      correctAnswer: 1
+    },
+    {
+      question: 'What does B2B mean?',
+      options: ['Buyer to Buyer', 'Business to Business', 'Business to Buyer', 'Back to Business'],
+      correctAnswer: 1
+    },
+    {
+      question: 'What is the primary purpose of a business plan?',
+      options: ['To get a loan only', 'To outline strategy', 'To hire employees', 'To file taxes'],
+      correctAnswer: 1
+    },
+    {
+      question: 'What is net profit?',
+      options: ['Revenue minus all expenses', 'Total revenue', 'Sales minus cogs', 'Gross profit'],
+      correctAnswer: 0
+    },
+    {
+      question: 'What is a market segment?',
+      options: ['The whole market', 'A subgroup of people or organizations', 'A competitor', 'A product line'],
       correctAnswer: 1
     }
   ];
@@ -125,6 +196,41 @@ const courseSeed = (instructorId) => {
       question: 'A common goal in negotiation is to:',
       options: ['Win at all costs', 'Find mutual value', 'Avoid questions', 'Delay decisions'],
       correctAnswer: 1
+    },
+    {
+      question: 'What is a lead?',
+      options: ['A closed sale', 'A potential customer', 'A lost customer', 'A partner'],
+      correctAnswer: 1
+    },
+    {
+      question: 'What does CRM stand for?',
+      options: ['Customer Resource Management', 'Customer Relationship Management', 'Central Route Market', 'Computer Related Marketing'],
+      correctAnswer: 1
+    },
+    {
+      question: 'What is upselling?',
+      options: ['Selling a cheaper item', 'Selling a more expensive version', 'Giving a discount', 'Selling to a new customer'],
+      correctAnswer: 1
+    },
+    {
+      question: 'What is a cold call?',
+      options: ['Calling a known customer', 'Calling a prospect without prior contact', 'Calling in winter', 'Calling for support'],
+      correctAnswer: 1
+    },
+    {
+      question: 'What is the sales funnel?',
+      options: ['The process of selling', 'A type of chart', 'A marketing tool', 'A sales meeting'],
+      correctAnswer: 0
+    },
+    {
+      question: 'What is closing?',
+      options: ['Opening a store', 'Finalizing the sale', 'Ending a call', 'Firing a salesperson'],
+      correctAnswer: 1
+    },
+    {
+      question: 'What is a gatekeeper?',
+      options: ['A security guard', 'Person who controls access to decision maker', 'A manager', 'A receptionist only'],
+      correctAnswer: 1
     }
   ];
 
@@ -142,6 +248,41 @@ const courseSeed = (instructorId) => {
     {
       question: 'Feature engineering is about:',
       options: ['Cleaning hardware', 'Creating useful input variables', 'Only choosing algorithms', 'Labeling outputs'],
+      correctAnswer: 1
+    },
+    {
+      question: 'What is a neural network?',
+      options: ['A computer network', 'A model inspired by the brain', 'A social network', 'A network of sensors'],
+      correctAnswer: 1
+    },
+    {
+      question: 'What is NLP?',
+      options: ['Natural Language Processing', 'New Learning Protocol', 'Neural Learning Process', 'Network Level Protocol'],
+      correctAnswer: 0
+    },
+    {
+      question: 'What is supervised learning?',
+      options: ['Learning without data', 'Training with labeled data', 'Learning from mistakes', 'Unsupervised training'],
+      correctAnswer: 1
+    },
+    {
+      question: 'What is a chatbot?',
+      options: ['A robot', 'AI program for conversation', 'A chat room', 'A messaging app'],
+      correctAnswer: 1
+    },
+    {
+      question: 'What is computer vision?',
+      options: ['Eye glasses for computers', 'AI for interpreting visual data', 'A monitor screen', 'Virtual reality'],
+      correctAnswer: 1
+    },
+    {
+      question: 'What is reinforcement learning?',
+      options: ['Learning from books', 'Learning through rewards/punishments', 'Learning by watching', 'Learning by coding'],
+      correctAnswer: 1
+    },
+    {
+      question: 'What is a dataset?',
+      options: ['A single file', 'Collection of data for training', 'A database', 'A variable'],
       correctAnswer: 1
     }
   ];
