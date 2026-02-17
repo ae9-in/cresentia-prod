@@ -66,6 +66,7 @@ body::after {
     opacity: 0;
     transform: translateY(14px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -246,31 +247,31 @@ button:hover {
   gap: 1rem;
 }
 
-.grid > .card {
+.grid>.card {
   animation: floatIn 0.6s ease both;
 }
 
-.grid > .card:nth-child(1) {
+.grid>.card:nth-child(1) {
   animation-delay: 0.05s;
 }
 
-.grid > .card:nth-child(2) {
+.grid>.card:nth-child(2) {
   animation-delay: 0.1s;
 }
 
-.grid > .card:nth-child(3) {
+.grid>.card:nth-child(3) {
   animation-delay: 0.15s;
 }
 
-.grid > .card:nth-child(4) {
+.grid>.card:nth-child(4) {
   animation-delay: 0.2s;
 }
 
-.grid > .card:nth-child(5) {
+.grid>.card:nth-child(5) {
   animation-delay: 0.25s;
 }
 
-.grid > .card:nth-child(6) {
+.grid>.card:nth-child(6) {
   animation-delay: 0.3s;
 }
 
@@ -467,6 +468,18 @@ button:hover {
   color: #cf2340;
 }
 
+.delete-btn {
+  background: color-mix(in srgb, #cf2340, white 90%);
+  color: #cf2340;
+  border-color: #cf2340;
+}
+
+.delete-btn:hover {
+  background: #cf2340;
+  color: white;
+  box-shadow: 0 8px 18px rgba(207, 35, 64, 0.2);
+}
+
 @media (max-width: 980px) {
   .auth-shell {
     grid-template-columns: 1fr;
@@ -479,6 +492,7 @@ button:hover {
 }
 
 @media (max-width: 860px) {
+
   .filters,
   .two-col {
     grid-template-columns: 1fr;

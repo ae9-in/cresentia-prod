@@ -4,6 +4,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const buildRatings = (course) => {
   const total = course.reviews.reduce((sum, review) => sum + review.rating, 0);
   course.ratingAverage = course.reviews.length ? Number((total / course.reviews.length).toFixed(1)) : 0;
+akshara enterprises task
 };
 
 const escapeRegex = (value = '') => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -82,6 +83,51 @@ const createCourse = asyncHandler(async (req, res) => {
     throw new Error('category, title, and description are required');
   }
 
+  // Validate quiz questions before saving
+  if (Array.isArray(quizQuestions) && quizQuestions.length > 0) {
+    const invalidQuestions = [];
+
+    quizQuestions.forEach((q, index) => {
+      const errors = [];
+
+      if (!q.question || typeof q.question !== 'string' || !q.question.trim()) {
+        errors.push('question is required and must be a non-empty string');
+      }
+
+      if (!Array.isArray(q.options) || q.options.length !== 4) {
+        errors.push('options must be an array of exactly 4 strings');
+      } else {
+        q.options.forEach((opt, optIndex) => {
+          if (!opt || typeof opt !== 'string' || !opt.trim()) {
+            errors.push(`option ${optIndex + 1} is required and must be a non-empty string`);
+          }
+        });
+      }
+
+      if (typeof q.correctAnswer !== 'number' || q.correctAnswer < 0 || q.correctAnswer > 3) {
+        errors.push('correctAnswer must be a number between 0 and 3');
+      }
+
+      if (errors.length > 0) {
+        invalidQuestions.push({
+          index: index + 1,
+          question: q.question || '(empty)',
+          errors
+        });
+      }
+    });
+
+    if (invalidQuestions.length > 0) {
+      console.error('Invalid quiz questions detected:', JSON.stringify(invalidQuestions, null, 2));
+      res.status(400);
+      throw new Error(
+        `Invalid quiz questions found:\n${invalidQuestions
+          .map((iq) => `Question ${iq.index}: ${iq.errors.join(', ')}`)
+          .join('\n')}`
+      );
+    }
+  }
+
   const durationMinutes = Array.isArray(videos)
     ? videos.reduce((sum, video) => sum + Number(video.durationMinutes || 30), 0)
     : 0;
@@ -115,6 +161,52 @@ const updateCourse = asyncHandler(async (req, res) => {
   }
 
   const updates = req.body;
+
+  // Validate quiz questions if they are being updated
+  if (updates.quizQuestions && Array.isArray(updates.quizQuestions) && updates.quizQuestions.length > 0) {
+    const invalidQuestions = [];
+
+    updates.quizQuestions.forEach((q, index) => {
+      const errors = [];
+
+      if (!q.question || typeof q.question !== 'string' || !q.question.trim()) {
+        errors.push('question is required and must be a non-empty string');
+      }
+
+      if (!Array.isArray(q.options) || q.options.length !== 4) {
+        errors.push('options must be an array of exactly 4 strings');
+      } else {
+        q.options.forEach((opt, optIndex) => {
+          if (!opt || typeof opt !== 'string' || !opt.trim()) {
+            errors.push(`option ${optIndex + 1} is required and must be a non-empty string`);
+          }
+        });
+      }
+
+      if (typeof q.correctAnswer !== 'number' || q.correctAnswer < 0 || q.correctAnswer > 3) {
+        errors.push('correctAnswer must be a number between 0 and 3');
+      }
+
+      if (errors.length > 0) {
+        invalidQuestions.push({
+          index: index + 1,
+          question: q.question || '(empty)',
+          errors
+        });
+      }
+    });
+
+    if (invalidQuestions.length > 0) {
+      console.error('Invalid quiz questions detected:', JSON.stringify(invalidQuestions, null, 2));
+      res.status(400);
+      throw new Error(
+        `Invalid quiz questions found:\n${invalidQuestions
+          .map((iq) => `Question ${iq.index}: ${iq.errors.join(', ')}`)
+          .join('\n')}`
+      );
+    }
+  }
+
   Object.assign(course, updates);
   if (Array.isArray(course.videos)) {
     course.durationMinutes = course.videos.reduce((sum, video) => sum + Number(video.durationMinutes || 30), 0);

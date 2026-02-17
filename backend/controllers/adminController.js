@@ -40,4 +40,68 @@ const getAllQuizQuestions = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-module.exports = { adminStats, listUsers, getAllQuizQuestions };
+const deleteCourse = asyncHandler(async (req, res) => {
+  const course = await Course.findById(req.params.id);
+
+  if (!course) {
+    res.status(404);
+    throw new Error('Course not found');
+  }
+
+  await Course.findByIdAndDelete(req.params.id);
+  res.json({ message: 'Course deleted successfully' });
+});
+
+const updateCourseAsAdmin = asyncHandler(async (req, res) => {
+  const course = await Course.findById(req.params.id);
+
+  if (!course) {
+    res.status(404);
+    throw new Error('Course not found');
+  }
+
+  const updates = req.body;
+  Object.assign(course, updates);
+
+  if (Array.isArray(course.videos)) {
+    course.durationMinutes = course.videos.reduce((sum, video) => sum + Number(video.durationMinutes || 30), 0);
+  }
+
+  await course.save();
+  res.json(course);
+});
+
+const createCourseAsAdmin = asyncHandler(async (req, res) => {
+  const { category, level, title, description, videos, quizQuestions } = req.body;
+
+  if (!category || !title || !description) {
+    res.status(400);
+    throw new Error('category, title, and description are required');
+  }
+
+  const durationMinutes = Array.isArray(videos)
+    ? videos.reduce((sum, video) => sum + Number(video.durationMinutes || 30), 0)
+    : 0;
+
+  const course = await Course.create({
+    category,
+    level,
+    title,
+    description,
+    videos: videos || [],
+    quizQuestions: quizQuestions || [],
+    durationMinutes,
+    createdBy: req.user._id
+  });
+
+  res.status(201).json(course);
+});
+
+module.exports = {
+  adminStats,
+  listUsers,
+  getAllQuizQuestions,
+  deleteCourse,
+  updateCourseAsAdmin,
+  createCourseAsAdmin
+};

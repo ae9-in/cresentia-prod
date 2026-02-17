@@ -16,7 +16,8 @@ const AdminPage = () => {
   const [form, setForm] = useState(emptyCourse);
   const [message, setMessage] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [videoUpload, setVideoUpload] = useState({ title: '', durationMinutes: 30, file: null });
+  const [videoUpload, setVideoUpload] = useState({ title: '', durationMinutes: 30, cloudinaryUrl: '' });
+  const [showCloudinaryInfo, setShowCloudinaryInfo] = useState(false);
 
   const loadCourses = () => {
     api.get('/courses').then((res) => setCourses(res.data));
@@ -28,22 +29,37 @@ const AdminPage = () => {
 
   const parseVideos = (text) => {
     if (!text.trim()) return [];
-    return text.split('\n').map((line) => {
-      const [title, url, duration] = line.split('|').map((v) => v.trim());
-      return { title, url, durationMinutes: Number(duration || 30) };
-    });
+    return text
+      .split('\n')
+      .filter((line) => line.trim()) // Filter out empty lines
+      .map((line) => {
+        const [title, url, duration] = line.split('|').map((v) => v.trim());
+        return { title, url, durationMinutes: Number(duration || 30) };
+      });
   };
 
   const parseQuiz = (text) => {
     if (!text.trim()) return [];
-    return text.split('\n').map((line) => {
-      const [question, optionA, optionB, optionC, optionD, answer] = line.split('|').map((v) => v.trim());
-      return {
-        question,
-        options: [optionA, optionB, optionC, optionD],
-        correctAnswer: Number(answer || 0)
-      };
-    });
+    return text
+      .split('\n')
+      .filter((line) => line.trim()) // Filter out empty lines
+      .map((line) => {
+        const parts = line.split('|').map((v) => v.trim());
+        const [question, optionA, optionB, optionC, optionD, answer] = parts;
+
+        // Validate that all required fields are present
+        if (!question || !optionA || !optionB || !optionC || !optionD) {
+          console.error('Invalid quiz question format:', line);
+          return null;
+        }
+
+        return {
+          question,
+          options: [optionA, optionB, optionC, optionD],
+          correctAnswer: Number(answer || 0)
+        };
+      })
+      .filter((q) => q !== null); // Remove any invalid questions
   };
 
   const submit = async (e) => {
@@ -76,8 +92,8 @@ const AdminPage = () => {
   };
 
   const uploadVideo = async () => {
-    if (!videoUpload.file) {
-      setMessage('Select a video file first');
+    if (!videoUpload.cloudinaryUrl.trim()) {
+      setMessage('Please enter a Cloudinary URL first');
       return;
     }
     if (!videoUpload.title.trim()) {
@@ -87,22 +103,30 @@ const AdminPage = () => {
     setUploading(true);
     setMessage('');
     try {
-      const payload = new FormData();
-      payload.append('video', videoUpload.file);
-      const { data } = await api.post('/uploads/videos', payload, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      const { data } = await api.post('/uploads/videos', {
+        cloudinaryUrl: videoUpload.cloudinaryUrl
       });
       const line = `${videoUpload.title} | ${data.url} | ${Number(videoUpload.durationMinutes || 30)}`;
       setForm((prev) => ({
         ...prev,
         videosText: prev.videosText ? `${prev.videosText}\n${line}` : line
       }));
-      setVideoUpload({ title: '', durationMinutes: 30, file: null });
-      setMessage('Video uploaded and added to course list');
+      setVideoUpload({ title: '', durationMinutes: 30, cloudinaryUrl: '' });
+      setMessage('Video added to course list successfully');
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Video upload failed');
+      setMessage(err.response?.data?.message || 'Failed to add video');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const loadCloudinaryInfo = async () => {
+    try {
+      const { data } = await api.get('/uploads/cloudinary-info');
+      setShowCloudinaryInfo(true);
+      setMessage(data.instructions.join('\n'));
+    } catch (err) {
+      setMessage('Failed to load Cloudinary instructions');
     }
   };
 
@@ -120,6 +144,20 @@ const AdminPage = () => {
         .map((q) => `${q.question} | ${q.options?.[0]} | ${q.options?.[1]} | ${q.options?.[2]} | ${q.options?.[3]} | 0`)
         .join('\n')
     });
+  };
+
+  const deleteCourse = async (courseId) => {
+    if (!window.confirm('Are you sure you want to delete this course?')) {
+      return;
+    }
+
+    try {
+      await api.delete(`/admin/courses/${courseId}`);
+      setMessage('Course deleted successfully');
+      loadCourses();
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'Failed to delete course');
+    }
   };
 
   return (
@@ -155,7 +193,7 @@ const AdminPage = () => {
           </select>
         </div>
         <div className="card upload-card">
-          <h3>Upload Video</h3>
+          <h3>Add Video (Cloudinary)</h3>
           <div className="meta-row">
             <input
               type="text"
@@ -175,15 +213,21 @@ const AdminPage = () => {
           </div>
           <div className="meta-row">
             <input
-              type="file"
-              accept="video/*"
-              onChange={(e) => setVideoUpload((prev) => ({ ...prev, file: e.target.files?.[0] || null }))}
+              type="url"
+              placeholder="Cloudinary video URL"
+              value={videoUpload.cloudinaryUrl}
+              onChange={(e) => setVideoUpload((prev) => ({ ...prev, cloudinaryUrl: e.target.value }))}
             />
             <button className="ghost-btn" type="button" onClick={uploadVideo} disabled={uploading}>
-              {uploading ? 'Uploading...' : 'Upload Video'}
+              {uploading ? 'Adding...' : 'Add Video'}
             </button>
           </div>
-          <p className="muted">Uploaded videos are appended to the list below.</p>
+          <div className="meta-row">
+            <button className="ghost-btn" type="button" onClick={loadCloudinaryInfo}>
+              How to upload to Cloudinary?
+            </button>
+          </div>
+          <p className="muted">Videos are added to the list below. Use Cloudinary for video hosting.</p>
         </div>
         <label>
           Videos (one per line: title | url | durationMinutes) - Video URL (Cloudinary or Direct Link)
@@ -211,9 +255,14 @@ const AdminPage = () => {
           <article key={course._id} className="card">
             <h3>{course.title}</h3>
             <p>{course.category}</p>
-            <button className="ghost-btn" type="button" onClick={() => editCourse(course)}>
-              Edit
-            </button>
+            <div className="meta-row">
+              <button className="ghost-btn" type="button" onClick={() => editCourse(course)}>
+                Edit
+              </button>
+              <button className="ghost-btn delete-btn" type="button" onClick={() => deleteCourse(course._id)}>
+                Delete
+              </button>
+            </div>
           </article>
         ))}
       </section>
