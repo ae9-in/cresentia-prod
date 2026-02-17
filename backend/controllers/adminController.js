@@ -19,4 +19,24 @@ const listUsers = async (req, res) => {
   res.json(users);
 };
 
-module.exports = { adminStats, listUsers };
+const getAllQuizQuestions = async (req, res) => {
+  // Get all courses with their quiz questions including correct answers
+  const courses = await Course.find().select('title category level quizQuestions');
+  
+  // Transform the data to show all questions for each course
+  const result = courses.map(course => ({
+    _id: course._id,
+    title: course.title,
+    category: course.category,
+    level: course.level,
+    quizQuestions: course.quizQuestions.map(q => ({
+      question: q.question,
+      options: q.options,
+      correctAnswer: q.correctAnswer
+    }))
+  }));
+
+  res.json(result);
+};
+
+module.exports = { adminStats, listUsers, getAllQuizQuestions };
