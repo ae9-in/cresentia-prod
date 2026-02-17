@@ -5,14 +5,21 @@ import User from '../models/User.js';
 // Only configure Google Strategy if credentials are provided
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   console.log('✅ Configuring Google OAuth Strategy');
-  console.log(`   Callback URL: http://localhost:${process.env.PORT || 5000}/api/auth/google/callback`);
+  
+  // Determine callback URL based on environment
+  const baseURL = process.env.VERCEL_URL 
+    ? `https://${process.env.VERCEL_URL}`
+    : `http://localhost:${process.env.PORT || 5000}`;
+  
+  const callbackURL = `${baseURL}/api/auth/google/callback`;
+  console.log(`   Callback URL: ${callbackURL}`);
   
   passport.use(
     new GoogleStrategy(
       {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: `http://localhost:${process.env.PORT || 5000}/api/auth/google/callback`,
+        callbackURL: callbackURL,
         proxy: true
       },
       async (accessToken, refreshToken, profile, done) => {
