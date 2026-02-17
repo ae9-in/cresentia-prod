@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const asyncHandler = require('../utils/asyncHandler');
 
-const protect = async (req, res, next) => {
+const protect = asyncHandler(async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     res.status(401);
@@ -18,16 +19,16 @@ const protect = async (req, res, next) => {
     }
     next();
   } catch (error) {
-    res.status(401);
-    throw new Error('Not authorized. Invalid token');
+    if (res.statusCode === 200) res.status(401);
+    next(new Error('Not authorized. Invalid token'));
   }
-};
+});
 
 const authorizeRoles = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
+    if (!req.user || !roles.includes(req.user.role)) {
       res.status(403);
-      throw new Error('Forbidden. Insufficient role');
+      return next(new Error('Forbidden. Insufficient role'));
     }
     next();
   };

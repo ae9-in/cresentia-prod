@@ -1,4 +1,5 @@
 const Course = require('../models/Course');
+const asyncHandler = require('../utils/asyncHandler');
 
 const buildRatings = (course) => {
   const total = course.reviews.reduce((sum, review) => sum + review.rating, 0);
@@ -7,7 +8,7 @@ const buildRatings = (course) => {
 
 const escapeRegex = (value = '') => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-const listCourses = async (req, res) => {
+const listCourses = asyncHandler(async (req, res) => {
   const { category, level, q } = req.query;
   const query = {};
 
@@ -25,9 +26,9 @@ const listCourses = async (req, res) => {
     .select('-quizQuestions.correctAnswer');
 
   res.json(courses);
-};
+});
 
-const getCourseById = async (req, res) => {
+const getCourseById = asyncHandler(async (req, res) => {
   const course = await Course.findById(req.params.id)
     .populate('createdBy', 'name role')
     .populate('reviews.user', 'name');
@@ -38,15 +39,15 @@ const getCourseById = async (req, res) => {
   }
 
   const maskedCourse = course.toObject();
-  maskedCourse.quizQuestions = course.quizQuestions.map((q) => ({
+  maskedCourse.quizQuestions = (course.quizQuestions || []).map((q) => ({
     question: q.question,
     options: q.options
   }));
 
   res.json(maskedCourse);
-};
+});
 
-const searchCourses = async (req, res) => {
+const searchCourses = asyncHandler(async (req, res) => {
   const { q = '', category, level } = req.query;
   const safeQ = escapeRegex(q);
   const query = {};
@@ -63,17 +64,17 @@ const searchCourses = async (req, res) => {
   const courses = await Course.find(query).select('title category level ratingAverage');
   const autocomplete = safeQ
     ? await Course.find({ title: { $regex: `^${safeQ}`, $options: 'i' } })
-        .select('title')
-        .limit(8)
+      .select('title')
+      .limit(8)
     : [];
 
   res.json({
     courses,
     autocomplete: autocomplete.map((item) => item.title)
   });
-};
+});
 
-const createCourse = async (req, res) => {
+const createCourse = asyncHandler(async (req, res) => {
   const { category, level, title, description, videos, quizQuestions } = req.body;
 
   if (!category || !title || !description) {
@@ -97,9 +98,9 @@ const createCourse = async (req, res) => {
   });
 
   res.status(201).json(course);
-};
+});
 
-const updateCourse = async (req, res) => {
+const updateCourse = asyncHandler(async (req, res) => {
   const course = await Course.findById(req.params.id);
   if (!course) {
     res.status(404);
@@ -121,9 +122,9 @@ const updateCourse = async (req, res) => {
 
   await course.save();
   res.json(course);
-};
+});
 
-const addReview = async (req, res) => {
+const addReview = asyncHandler(async (req, res) => {
   const course = await Course.findById(req.params.id);
   if (!course) {
     res.status(404);
@@ -152,12 +153,12 @@ const addReview = async (req, res) => {
   buildRatings(course);
   await course.save();
   res.status(201).json({ message: 'Review saved', ratingAverage: course.ratingAverage });
-};
+});
 
-const categories = async (req, res) => {
+const categories = asyncHandler(async (req, res) => {
   const items = await Course.distinct('category');
   res.json(items);
-};
+});
 
 module.exports = {
   listCourses,

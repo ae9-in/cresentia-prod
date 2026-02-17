@@ -58,17 +58,21 @@ const AdminPage = () => {
       quizQuestions: parseQuiz(form.quizText)
     };
 
-    if (editingId) {
-      await api.put(`/courses/${editingId}`, payload);
-      setMessage('Course updated');
-    } else {
-      await api.post('/courses', payload);
-      setMessage('Course created');
-    }
+    try {
+      if (editingId) {
+        await api.put(`/courses/${editingId}`, payload);
+        setMessage('Course updated');
+      } else {
+        await api.post('/courses', payload);
+        setMessage('Course created');
+      }
 
-    setEditingId('');
-    setForm(emptyCourse);
-    loadCourses();
+      setEditingId('');
+      setForm(emptyCourse);
+      loadCourses();
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'Operation failed');
+    }
   };
 
   const uploadVideo = async () => {

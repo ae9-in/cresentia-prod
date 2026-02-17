@@ -1,6 +1,7 @@
 const PDFDocument = require('pdfkit');
 const Enrollment = require('../models/Enrollment');
 const Course = require('../models/Course');
+const asyncHandler = require('../utils/asyncHandler');
 
 const calculateProgress = (course, enrollment) => {
   const videoWeight = 70;
@@ -11,7 +12,7 @@ const calculateProgress = (course, enrollment) => {
   return Math.min(100, Math.round(videoProgress + quizProgress));
 };
 
-const enrollCourse = async (req, res) => {
+const enrollCourse = asyncHandler(async (req, res) => {
   const course = await Course.findById(req.params.courseId);
   if (!course) {
     res.status(404);
@@ -31,17 +32,17 @@ const enrollCourse = async (req, res) => {
   }
 
   res.status(201).json(enrollment);
-};
+});
 
-const getMyEnrollments = async (req, res) => {
+const getMyEnrollments = asyncHandler(async (req, res) => {
   const enrollments = await Enrollment.find({ student: req.user._id })
     .populate('course')
     .sort({ createdAt: -1 });
 
   res.json(enrollments);
-};
+});
 
-const updateVideoProgress = async (req, res) => {
+const updateVideoProgress = asyncHandler(async (req, res) => {
   const { videoIndex } = req.body;
   const course = await Course.findById(req.params.courseId);
   if (!course) {
@@ -70,9 +71,9 @@ const updateVideoProgress = async (req, res) => {
 
   await enrollment.save();
   res.json(enrollment);
-};
+});
 
-const submitQuiz = async (req, res) => {
+const submitQuiz = asyncHandler(async (req, res) => {
   const { answers } = req.body;
   const course = await Course.findById(req.params.courseId);
   if (!course) {
@@ -116,9 +117,9 @@ const submitQuiz = async (req, res) => {
     score: percentage,
     progressPercent: enrollment.progressPercent
   });
-};
+});
 
-const downloadCertificate = async (req, res) => {
+const downloadCertificate = asyncHandler(async (req, res) => {
   const course = await Course.findById(req.params.courseId);
   if (!course) {
     res.status(404);
@@ -155,7 +156,7 @@ const downloadCertificate = async (req, res) => {
   doc.fontSize(12).text(`Completed on: ${enrollment.completedAt.toDateString()}`, { align: 'center' });
   doc.text(`Quiz score: ${enrollment.quizScore}%`, { align: 'center' });
   doc.end();
-};
+});
 
 module.exports = {
   enrollCourse,

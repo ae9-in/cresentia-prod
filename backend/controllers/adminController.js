@@ -1,7 +1,8 @@
 const User = require('../models/User');
 const Course = require('../models/Course');
+const asyncHandler = require('../utils/asyncHandler');
 
-const adminStats = async (req, res) => {
+const adminStats = asyncHandler(async (req, res) => {
   const [users, courses] = await Promise.all([
     User.countDocuments(),
     Course.countDocuments()
@@ -12,17 +13,17 @@ const adminStats = async (req, res) => {
   ]);
 
   res.json({ users, courses, byRole });
-};
+});
 
-const listUsers = async (req, res) => {
+const listUsers = asyncHandler(async (req, res) => {
   const users = await User.find().select('-password').sort({ createdAt: -1 });
   res.json(users);
-};
+});
 
-const getAllQuizQuestions = async (req, res) => {
+const getAllQuizQuestions = asyncHandler(async (req, res) => {
   // Get all courses with their quiz questions including correct answers
   const courses = await Course.find().select('title category level quizQuestions');
-  
+
   // Transform the data to show all questions for each course
   const result = courses.map(course => ({
     _id: course._id,
@@ -37,6 +38,6 @@ const getAllQuizQuestions = async (req, res) => {
   }));
 
   res.json(result);
-};
+});
 
 module.exports = { adminStats, listUsers, getAllQuizQuestions };

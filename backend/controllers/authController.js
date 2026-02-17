@@ -1,9 +1,10 @@
 const User = require('../models/User');
 const { generateToken } = require('../utils/jwtUtils');
-const { createVerificationToken } = require('../utils/tokenUtils');
-const { sendVerificationEmail } = require('../utils/emailUtils');
+const asyncHandler = require('../utils/asyncHandler');
+// const { createVerificationToken } = require('../utils/tokenUtils');
+// const { sendVerificationEmail } = require('../utils/emailUtils');
 
-const register = async (req, res) => {
+const register = asyncHandler(async (req, res) => {
   const { name, email, password, role } = req.body;
   if (!name || !email || !password) {
     return res.status(400).json({ message: 'name, email, and password are required' });
@@ -33,9 +34,9 @@ const register = async (req, res) => {
   };
 
   res.status(201).json(response);
-};
+});
 
-const verifyEmail = async (req, res) => {
+const verifyEmail = asyncHandler(async (req, res) => {
   const { token } = req.query;
   if (!token) {
     return res.status(400).json({ message: 'Verification token is required' });
@@ -56,9 +57,9 @@ const verifyEmail = async (req, res) => {
   await user.save();
 
   res.json({ message: 'Email verified successfully' });
-};
+});
 
-const login = async (req, res) => {
+const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ message: 'email and password are required' });
@@ -80,10 +81,10 @@ const login = async (req, res) => {
       isVerified: user.isVerified
     }
   });
-};
+});
 
-const me = async (req, res) => {
+const me = asyncHandler(async (req, res) => {
   res.json({ user: req.user });
-};
+});
 
 module.exports = { register, verifyEmail, login, me };
