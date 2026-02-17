@@ -9,6 +9,7 @@ import CourseDetailPage from './pages/CourseDetailPage';
 import DashboardPage from './pages/DashboardPage';
 import AdminPage from './pages/AdminPage';
 import AssignmentPage from './pages/AssignmentPage';
+import GoogleAuthCallback from './pages/GoogleAuthCallback';
 
 import { Routes, Route } from 'react-router-dom';
 
@@ -36,6 +37,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/auth/google/success" element={<GoogleAuthCallback />} />
         <Route path="/courses/:id" element={<CourseDetailPage />} />
         <Route
           path="/courses/:id/assignment"

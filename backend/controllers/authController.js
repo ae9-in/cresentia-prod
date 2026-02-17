@@ -87,4 +87,18 @@ const me = asyncHandler(async (req, res) => {
   res.json({ user: req.user });
 });
 
-module.exports = { register, verifyEmail, login, me };
+// Google OAuth callback handler
+const googleCallback = asyncHandler(async (req, res) => {
+  // User is authenticated by Passport and attached to req.user
+  if (!req.user) {
+    return res.redirect(`${process.env.CLIENT_URL}/login?error=authentication_failed`);
+  }
+
+  // Generate JWT token
+  const token = generateToken(req.user._id);
+
+  // Redirect to frontend with token
+  res.redirect(`${process.env.CLIENT_URL}/auth/google/success?token=${token}`);
+});
+
+module.exports = { register, verifyEmail, login, me, googleCallback };

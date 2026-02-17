@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 const LoginPage = () => {
   const { login } = useAuth();
@@ -74,6 +75,20 @@ const LoginPage = () => {
           <button className="primary-btn" type="submit">
             Login
           </button>
+          
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            margin: '20px 0',
+            gap: '10px'
+          }}>
+            <hr style={{ flex: 1, border: 'none', borderTop: '1px solid #e0e0e0' }} />
+            <span style={{ color: '#666', fontSize: '14px' }}>OR</span>
+            <hr style={{ flex: 1, border: 'none', borderTop: '1px solid #e0e0e0' }} />
+          </div>
+
+          <GoogleSignInButton />
+          
           <p className="muted">
             New user? <Link to="/register">Register</Link>
           </p>
