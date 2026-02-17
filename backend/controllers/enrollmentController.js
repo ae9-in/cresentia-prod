@@ -1,7 +1,7 @@
-const PDFDocument = require('pdfkit');
-const Enrollment = require('../models/Enrollment');
-const Course = require('../models/Course');
-const asyncHandler = require('../utils/asyncHandler');
+import PDFDocument from 'pdfkit';
+import Enrollment from '../models/Enrollment.js';
+import Course from '../models/Course.js';
+import asyncHandler from '../utils/asyncHandler.js';
 
 const calculateProgress = (course, enrollment) => {
   const videoWeight = 70;
@@ -158,7 +158,7 @@ const downloadCertificate = asyncHandler(async (req, res) => {
   doc.end();
 });
 
-module.exports = {
+export {
   enrollCourse,
   getMyEnrollments,
   updateVideoProgress,

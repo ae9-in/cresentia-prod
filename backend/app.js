@@ -1,20 +1,24 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const passport = require('./config/passport');
-const authRoutes = require('./routes/authRoutes');
-const courseRoutes = require('./routes/courseRoutes');
-const enrollmentRoutes = require('./routes/enrollmentRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-const uploadRoutes = require('./routes/uploadRoutes');
-const { notFound, errorHandler } = require('./middlewares/errorMiddleware');
+import express from 'express';
+import cors from 'cors';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import passport from './config/passport.js';
+import authRoutes from './routes/authRoutes.js';
+import courseRoutes from './routes/courseRoutes.js';
+import enrollmentRoutes from './routes/enrollmentRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
+import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use(passport.initialize());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(join(__dirname, 'uploads')));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'Learnera API' });
@@ -29,4 +33,4 @@ app.use('/api/uploads', uploadRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-module.exports = app;
+export default app;

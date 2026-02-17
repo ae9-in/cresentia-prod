@@ -1,5 +1,5 @@
-const express = require('express');
-const { protect, authorizeRoles } = require('../middlewares/authMiddleware');
+import express from 'express';
+import { protect, authorizeRoles } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -38,4 +38,4 @@ router.get('/cloudinary-info', protect, authorizeRoles('admin', 'instructor'), (
   });
 });
 
-module.exports = router;
+export default router;

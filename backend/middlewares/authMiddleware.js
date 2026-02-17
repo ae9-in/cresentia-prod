@@ -1,6 +1,6 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const asyncHandler = require('../utils/asyncHandler');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import asyncHandler from '../utils/asyncHandler.js';
 
 const protect = asyncHandler(async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -34,4 +34,4 @@ const authorizeRoles = (...roles) => {
   };
 };
 
-module.exports = { protect, authorizeRoles };
+export { protect, authorizeRoles };

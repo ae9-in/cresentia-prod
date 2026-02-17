@@ -1,13 +1,13 @@
-const express = require('express');
-const {
+import express from 'express';
+import {
     adminStats,
     listUsers,
     getAllQuizQuestions,
     deleteCourse,
     updateCourseAsAdmin,
     createCourseAsAdmin
-} = require('../controllers/adminController');
-const { protect, authorizeRoles } = require('../middlewares/authMiddleware');
+} from '../controllers/adminController.js';
+import { protect, authorizeRoles } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -20,4 +20,4 @@ router.post('/courses', protect, authorizeRoles('admin'), createCourseAsAdmin);
 router.put('/courses/:id', protect, authorizeRoles('admin'), updateCourseAsAdmin);
 router.delete('/courses/:id', protect, authorizeRoles('admin'), deleteCourse);
 
-module.exports = router;
+export default router;

@@ -2,6 +2,7 @@
   "name": "learnera-backend",
   "version": "1.0.0",
   "description": "Learnera backend API",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",

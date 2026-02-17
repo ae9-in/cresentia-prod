@@ -1,30 +1,41 @@
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const User = require('../models/User');
+import passport from 'passport';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import User from '../models/User.js';
 
 // Only configure Google Strategy if credentials are provided
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  console.log('✅ Configuring Google OAuth Strategy');
+  console.log(`   Callback URL: http://localhost:${process.env.PORT || 5000}/api/auth/google/callback`);
+  
   passport.use(
     new GoogleStrategy(
       {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: '/api/auth/google/callback'
+        callbackURL: `http://localhost:${process.env.PORT || 5000}/api/auth/google/callback`,
+        proxy: true
       },
       async (accessToken, refreshToken, profile, done) => {
         try {
+          console.log('🔐 Google OAuth callback triggered');
+          console.log(`   Profile ID: ${profile.id}`);
+          console.log(`   Display Name: ${profile.displayName}`);
+          
           // Extract email from profile
           const email = profile.emails && profile.emails[0] && profile.emails[0].value;
           
           if (!email) {
+            console.error('❌ No email found in Google profile');
             return done(new Error('No email found in Google profile'), null);
           }
+
+          console.log(`   Email: ${email}`);
 
           // Check if user already exists with this Google ID
           let user = await User.findOne({ googleId: profile.id });
 
           if (user) {
-            // User exists with Google ID, return user
+            console.log('✅ User found with Google ID, logging in');
             return done(null, user);
           }
 
@@ -32,6 +43,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
           user = await User.findOne({ email: email.toLowerCase() });
 
           if (user) {
+            console.log('✅ User found with email, linking Google account');
             // Link Google account to existing user
             user.googleId = profile.id;
             user.isVerified = true; // Google accounts are pre-verified
@@ -40,6 +52,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
           }
 
           // Create new user
+          console.log('✅ Creating new user from Google profile');
           const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
           user = await User.create({
             name: profile.displayName || 'Google User',
@@ -50,8 +63,10 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             password: randomPassword // Random password (won't be used for Google login)
           });
 
+          console.log(`✅ New user created: ${user._id}`);
           return done(null, user);
         } catch (error) {
+          console.error('❌ Google OAuth error:', error.message);
           return done(error, null);
         }
       }
@@ -77,4 +92,4 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-module.exports = passport;
+export default passport;

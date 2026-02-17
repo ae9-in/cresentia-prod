@@ -1,6 +1,6 @@
-const User = require('../models/User');
-const Course = require('../models/Course');
-const asyncHandler = require('../utils/asyncHandler');
+import User from '../models/User.js';
+import Course from '../models/Course.js';
+import asyncHandler from '../utils/asyncHandler.js';
 
 const adminStats = asyncHandler(async (req, res) => {
   const [users, courses] = await Promise.all([
@@ -97,7 +97,7 @@ const createCourseAsAdmin = asyncHandler(async (req, res) => {
   res.status(201).json(course);
 });
 
-module.exports = {
+export {
   adminStats,
   listUsers,
   getAllQuizQuestions,

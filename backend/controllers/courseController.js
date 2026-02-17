@@ -1,5 +1,5 @@
-const Course = require('../models/Course');
-const asyncHandler = require('../utils/asyncHandler');
+import Course from '../models/Course.js';
+import asyncHandler from '../utils/asyncHandler.js';
 
 const buildRatings = (course) => {
   const total = course.reviews.reduce((sum, review) => sum + review.rating, 0);
@@ -251,7 +251,7 @@ const categories = asyncHandler(async (req, res) => {
   res.json(items);
 });
 
-module.exports = {
+export {
   listCourses,
   getCourseById,
   searchCourses,
