@@ -3,12 +3,13 @@ import mongoose from 'mongoose';
 const connectDB = async () => {
   try {
     if (!process.env.MONGO_URI || typeof process.env.MONGO_URI !== 'string') {
-      throw new Error('MONGO_URI is missing. Set it in environment variables');
+      console.warn('⚠️  MONGO_URI is missing or invalid in environment variables');
+      return;
     }
     
     // Check if already connected (for serverless)
     if (mongoose.connection.readyState === 1) {
-      console.log('MongoDB already connected');
+      console.log('✅ MongoDB already connected');
       return;
     }
     
@@ -17,10 +18,10 @@ const connectDB = async () => {
       socketTimeoutMS: 45000,
     });
     
-    console.log(`MongoDB connected: ${conn.connection.host}`);
+    console.log(`✅ MongoDB connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error(`MongoDB connection error: ${error.message}`);
-    throw error;
+    console.error(`❌ MongoDB connection error: ${error.message}`);
+    // Don't throw - let the app continue without DB
   }
 };
 

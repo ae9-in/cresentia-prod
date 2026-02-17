@@ -1,26 +1,20 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import GoogleSignInButton from '../components/GoogleSignInButton';
 
 const RegisterPage = () => {
   const { register } = useAuth();
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'student' });
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [verificationUrl, setVerificationUrl] = useState('');
 
   const submit = async (e) => {
     e.preventDefault();
     setError('');
     setMessage('');
-    setVerificationUrl('');
     try {
       const { data } = await register(form);
-      setMessage(data.message || 'Registered successfully. Verify your email.');
-      if (data.verificationUrl) {
-        setVerificationUrl(data.verificationUrl);
-      }
+      setMessage(data.message || 'Registered successfully. You can now login.');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
     }
@@ -57,11 +51,6 @@ const RegisterPage = () => {
           </div>
           {message && <p className="success">{message}</p>}
           {error && <p className="error">{error}</p>}
-          {verificationUrl && (
-            <p className="muted">
-              Verify now: <a href={verificationUrl}>Open verification link</a>
-            </p>
-          )}
           <label className="field">
             <span>Name</span>
             <input
@@ -102,19 +91,6 @@ const RegisterPage = () => {
           <button className="primary-btn" type="submit">
             Register
           </button>
-          
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            margin: '20px 0',
-            gap: '10px'
-          }}>
-            <hr style={{ flex: 1, border: 'none', borderTop: '1px solid #e0e0e0' }} />
-            <span style={{ color: '#666', fontSize: '14px' }}>OR</span>
-            <hr style={{ flex: 1, border: 'none', borderTop: '1px solid #e0e0e0' }} />
-          </div>
-
-          <GoogleSignInButton />
           
           <p className="muted">
             Already registered? <Link to="/login">Login</Link>
