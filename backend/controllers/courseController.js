@@ -4,7 +4,6 @@ const asyncHandler = require('../utils/asyncHandler');
 const buildRatings = (course) => {
   const total = course.reviews.reduce((sum, review) => sum + review.rating, 0);
   course.ratingAverage = course.reviews.length ? Number((total / course.reviews.length).toFixed(1)) : 0;
-akshara enterprises task
 };
 
 const escapeRegex = (value = '') => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
