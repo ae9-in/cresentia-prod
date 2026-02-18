@@ -1,22 +1,33 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const RegisterPage = () => {
-  const { register } = useAuth();
+  const { register, login } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'student' });
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
     setError('');
     setMessage('');
+    setLoading(true);
+    
     try {
-      const { data } = await register(form);
-      setMessage(data.message || 'Registered successfully. You can now login.');
+      // Register the user
+      await register(form);
+      
+      // Auto-login after successful registration
+      await login(form.email, form.password);
+      
+      // Redirect to dashboard
+      navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
+      setLoading(false);
     }
   };
 
@@ -59,6 +70,7 @@ const RegisterPage = () => {
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
+              disabled={loading}
             />
           </label>
           <label className="field">
@@ -69,6 +81,7 @@ const RegisterPage = () => {
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               required
+              disabled={loading}
             />
           </label>
           <label className="field">
@@ -79,17 +92,18 @@ const RegisterPage = () => {
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               required
+              disabled={loading}
             />
           </label>
           <label className="field">
             <span>Role</span>
-            <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+            <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} disabled={loading}>
               <option value="student">Student</option>
               <option value="instructor">Instructor</option>
             </select>
           </label>
-          <button className="primary-btn" type="submit">
-            Register
+          <button className="primary-btn" type="submit" disabled={loading}>
+            {loading ? 'Creating Account...' : 'Register'}
           </button>
           
           <p className="muted">

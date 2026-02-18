@@ -18,14 +18,6 @@ Your backend has been configured for Vercel deployment with:
 - [ ] Database user has correct permissions
 - [ ] IP whitelist includes `0.0.0.0/0` (allow all) for Vercel
 - [ ] Connection string is ready
-
-### 2. Google OAuth Setup
-- [ ] Google Cloud Console project created
-- [ ] OAuth 2.0 credentials created
-- [ ] Client ID and Secret ready
-
----
-
 ## 🚀 Deploy Backend to Vercel
 
 ### Step 1: Install Vercel CLI

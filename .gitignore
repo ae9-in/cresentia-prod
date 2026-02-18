@@ -9,3 +9,6 @@ frontend/npm-debug.log*
 *.log
 dist
 build
+
+.vercel
+.env*.local

@@ -1,9 +1,16 @@
-require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
-const mongoose = require('mongoose');
-const User = require('../models/User');
-const Course = require('../models/Course');
-const Enrollment = require('../models/Enrollment');
-const connectDB = require('../config/db');
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import mongoose from 'mongoose';
+import User from '../models/User.js';
+import Course from '../models/Course.js';
+import Enrollment from '../models/Enrollment.js';
+import connectDB from '../config/db.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({ path: join(__dirname, '../.env') });
 
 const videoByTitle = {
   'Full Stack Web Fundamentals': 'https://res.cloudinary.com/dsdx78fgf/video/upload/v1771233129/How_I_d_Learn_Full-Stack_Web_Development_If_I_Could_Start_Over_-_Conner_Ardman_360p_h264_oifvaq.mp4',
