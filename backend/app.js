@@ -84,7 +84,7 @@ app.use('/uploads', express.static(join(__dirname, 'uploads')));
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
-    service: 'Learnera API',
+    service: 'Crescentia API',
     database: isConnected() ? 'connected' : 'disconnected',
     mongoUri: process.env.MONGO_URI ? 'configured' : 'missing',
     lastError: connectionError || 'none'

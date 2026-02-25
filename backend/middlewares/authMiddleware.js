@@ -12,7 +12,14 @@ const protect = asyncHandler(async (req, res, next) => {
   const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.userId).select('-password');
+    // CRITICAL: Populate assignedCourses to get full course data including videos and assessments
+    req.user = await User.findById(decoded.userId)
+      .select('-password')
+      .populate({
+        path: 'assignedCourses',
+        select: 'title description category level videos quizQuestions modules isPublished'
+      });
+    
     if (!req.user) {
       res.status(401);
       throw new Error('Not authorized. User not found');
@@ -34,4 +41,12 @@ const authorizeRoles = (...roles) => {
   };
 };
 
-export { protect, authorizeRoles };
+const isAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    res.status(403);
+    return next(new Error('Forbidden. Admin access required'));
+  }
+  next();
+};
+
+export { protect, authorizeRoles, isAdmin };

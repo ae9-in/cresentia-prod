@@ -36,14 +36,14 @@ const RegisterPage = () => {
       <section className="auth-shell">
         <div className="auth-panel">
           <div className="auth-brand">
-            <span className="brand-pill">Learnera</span>
+            <span className="brand-pill">Crescentia</span>
             <h1>Create your account.</h1>
             <p>Start learning with personalized paths, projects, and progress insights built for you.</p>
           </div>
           <ul className="auth-features">
             <li>
-              <span>Role-based learning</span>
-              <small>Choose a student or instructor profile tailored to your goals.</small>
+              <span>Personalized learning</span>
+              <small>Access curated courses tailored to your goals.</small>
             </li>
             <li>
               <span>Smart course picks</span>
@@ -58,7 +58,7 @@ const RegisterPage = () => {
         <form className="auth-form card" onSubmit={submit}>
           <div>
             <h2>Create Account</h2>
-            <p className="muted">Join Learnera to access courses and certificates.</p>
+            <p className="muted">Join Crescentia to access courses and certificates.</p>
           </div>
           {message && <p className="success">{message}</p>}
           {error && <p className="error">{error}</p>}
@@ -94,13 +94,6 @@ const RegisterPage = () => {
               required
               disabled={loading}
             />
-          </label>
-          <label className="field">
-            <span>Role</span>
-            <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} disabled={loading}>
-              <option value="student">Student</option>
-              <option value="instructor">Instructor</option>
-            </select>
           </label>
           <button className="primary-btn" type="submit" disabled={loading}>
             {loading ? 'Creating Account...' : 'Register'}

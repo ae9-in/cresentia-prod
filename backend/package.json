@@ -1,13 +1,14 @@
 {
-  "name": "learnera-backend",
+  "name": "crescentia-backend",
   "version": "1.0.0",
-  "description": "Learnera backend API",
+  "description": "Crescentia backend API",
   "type": "module",
   "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "seed": "node seed/seedData.js"
+    "seed": "node seed/seedData.js",
+    "clear": "node clear-database.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

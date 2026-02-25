@@ -23,9 +23,9 @@ const sendVerificationEmail = async (email, verificationUrl) => {
   }
 
   await transporter.sendMail({
-    from: process.env.MAIL_FROM || 'no-reply@learnera.local',
+    from: process.env.MAIL_FROM || 'no-reply@crescentia.com',
     to: email,
-    subject: 'Verify your Learnera account',
+    subject: 'Verify your Crescentia account',
     text: `Click this link to verify your account: ${verificationUrl}`
   });
   return { delivered: true };

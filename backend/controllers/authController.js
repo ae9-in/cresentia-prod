@@ -13,7 +13,7 @@ const register = asyncHandler(async (req, res) => {
     return res.status(409).json({ message: 'User with this email already exists' });
   }
 
-  const allowedPublicRoles = ['student', 'instructor'];
+  const allowedPublicRoles = ['student'];
   const user = await User.create({
     name,
     email: email.toLowerCase(),
@@ -60,12 +60,33 @@ const login = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'email and password are required' });
   }
 
-  const user = await User.findOne({ email: email.toLowerCase() });
+  // CRITICAL: Populate assignedCourses with basic course info
+  const user = await User.findOne({ email: email.toLowerCase() })
+    .populate({
+      path: 'assignedCourses',
+      select: 'title description category level isPublished'
+    });
+    
   if (!user || !(await user.matchPassword(password))) {
     return res.status(401).json({ message: 'Invalid email or password' });
   }
 
+  // Check if user is active
+  if (!user.isActive) {
+    return res.status(403).json({ message: 'Your account has been deactivated. Please contact an administrator.' });
+  }
+
   const token = generateToken(user._id);
+  
+  console.log('\n========================================');
+  console.log('🔐 User Login Successful');
+  console.log('========================================');
+  console.log('👤 User:', user.email);
+  console.log('👤 Role:', user.role);
+  console.log('📚 Assigned Courses:', user.assignedCourses?.length || 0);
+  console.log('📚 Course IDs:', user.assignedCourses?.map(c => c._id.toString()));
+  console.log('========================================\n');
+  
   res.json({
     token,
     user: {
@@ -73,12 +94,15 @@ const login = asyncHandler(async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      isVerified: user.isVerified
+      isVerified: user.isVerified,
+      isActive: user.isActive,
+      assignedCourses: user.assignedCourses // Now includes populated course data
     }
   });
 });
 
 const me = asyncHandler(async (req, res) => {
+  // req.user is already populated from authMiddleware
   res.json({ user: req.user });
 });
 

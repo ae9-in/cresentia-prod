@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../services/api';
 import CourseCard from '../components/CourseCard';
+import { useAuth } from '../context/AuthContext';
 
 const categories = ['All', 'IT', 'Business & Analytics', 'Sales & Soft Skills', 'AI & ML'];
 const levels = ['All', 'Beginner', 'Intermediate', 'Advanced'];
@@ -11,6 +12,8 @@ const HomePage = () => {
   const [selectedLevel, setSelectedLevel] = useState('All');
   const [query, setQuery] = useState('');
   const [autocomplete, setAutocomplete] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user, refreshUser, hasAccess } = useAuth();
 
   useEffect(() => {
     const params = {};
@@ -18,11 +21,13 @@ const HomePage = () => {
     if (selectedLevel !== 'All') params.level = selectedLevel;
     if (query) params.q = query;
 
+    setLoading(true);
     api
       .get('/courses', { params })
       .then((res) => setCourses(res.data))
-      .catch(() => setCourses([]));
-  }, [selectedCategory, selectedLevel, query]);
+      .catch(() => setCourses([]))
+      .finally(() => setLoading(false));
+  }, [selectedCategory, selectedLevel, query, user?.assignedCourses]); // Re-fetch when assignedCourses changes
 
   useEffect(() => {
     if (!query) {
@@ -47,7 +52,7 @@ const HomePage = () => {
   return (
     <main className="container page">
       <section className="hero">
-        <h1>Build your future with Learnera</h1>
+        <h1>Build your future with Crescentia</h1>
         <p>Browse curated courses, watch lessons, take assessments, and earn your completion certificate.</p>
       </section>
 
@@ -86,11 +91,65 @@ const HomePage = () => {
       </section>
 
       <h2>{heading}</h2>
-      <section className="grid">
-        {courses.map((course) => (
-          <CourseCard key={course._id} course={course} />
-        ))}
-      </section>
+      
+      {/* Loading State */}
+      {loading && (
+        <div className="loading-spinner">Loading courses...</div>
+      )}
+
+      {/* Empty State - No Courses */}
+      {!loading && (!courses || courses.length === 0) && (
+        <div className="beautiful-empty-state">
+          <div className="empty-state-icon">📚</div>
+          <h3 className="empty-state-title">
+            {query || selectedCategory !== 'All' || selectedLevel !== 'All'
+              ? 'No Courses Found'
+              : user?.role === 'admin'
+              ? 'No Courses Created Yet'
+              : 'No Courses Assigned'}
+          </h3>
+          <p className="empty-state-description">
+            {query || selectedCategory !== 'All' || selectedLevel !== 'All'
+              ? 'Try adjusting your filters or search terms to find courses.'
+              : user?.role === 'admin'
+              ? 'Get started by creating your first course in the Admin Panel.'
+              : 'No courses have been assigned to you yet. Please contact an administrator to get course access.'}
+          </p>
+          <div className="empty-state-actions">
+            {(query || selectedCategory !== 'All' || selectedLevel !== 'All') && (
+              <button
+                className="primary-btn"
+                onClick={() => {
+                  setQuery('');
+                  setSelectedCategory('All');
+                  setSelectedLevel('All');
+                }}
+                type="button"
+              >
+                Clear Filters
+              </button>
+            )}
+            {user?.role === 'admin' && !query && selectedCategory === 'All' && selectedLevel === 'All' && (
+              <button
+                className="primary-btn"
+                onClick={() => window.location.href = '/admin'}
+                type="button"
+              >
+                Go to Admin Panel
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Courses Grid */}
+      {!loading && courses && courses.length > 0 && (
+        <section className="grid">
+          {courses.map((course) => (
+            <CourseCard key={course._id} course={course} />
+          ))}
+        </section>
+      )}
     </main>
   );
 };

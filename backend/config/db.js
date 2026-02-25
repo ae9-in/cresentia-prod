@@ -36,15 +36,17 @@ const connectDB = async (retryCount = 0) => {
     
     // Optimized for serverless with connection pooling
     const conn = await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 10000, // Reduced to 10s for faster failure
-      socketTimeoutMS: 45000,
-      connectTimeoutMS: 10000,
-      maxPoolSize: 1, // Single connection for serverless
-      minPoolSize: 0,
+      serverSelectionTimeoutMS: 30000, // Increased to 30s for better stability
+      socketTimeoutMS: 75000,
+      connectTimeoutMS: 30000,
+      maxPoolSize: 10, // Increased pool size for better connection reuse
+      minPoolSize: 1,
       retryWrites: true,
       retryReads: true,
       bufferCommands: false,
       autoIndex: false,
+      heartbeatFrequencyMS: 10000, // Check connection health every 10s
+      family: 4, // Use IPv4, skip IPv6 for faster connection
     });
     
     const duration = Date.now() - startTime;

@@ -55,8 +55,51 @@ export const AuthProvider = ({ children }) => {
     setAuthToken(null);
   };
 
+  const refreshUser = async () => {
+    if (!token) return;
+    
+    try {
+      const res = await api.get('/auth/me');
+      setUser(res.data.user);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      return res.data.user;
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+      return null;
+    }
+  };
+
+  // Check if user has access (for students with no assigned courses)
+  const hasAccess = () => {
+    if (!user) return false;
+    if (user.role === 'admin') return true;
+    if (user.role === 'student') {
+      return user.assignedCourses && user.assignedCourses.length > 0;
+    }
+    return false;
+  };
+
+  // Check if user has access to a specific course
+  const hasCourseAccess = (courseId) => {
+    if (!user) return false;
+    if (user.role === 'admin') return true;
+    if (user.role === 'student') {
+      if (!user.assignedCourses || user.assignedCourses.length === 0) {
+        return false;
+      }
+      // Handle both string and object ID formats
+      const hasAccess = user.assignedCourses.some(id => {
+        const idStr = typeof id === 'object' && id._id ? id._id.toString() : id.toString();
+        return idStr === courseId.toString();
+      });
+      console.log('Course Access Check:', { courseId, assignedCourses: user.assignedCourses, hasAccess });
+      return hasAccess;
+    }
+    return false;
+  };
+
   const value = useMemo(
-    () => ({ token, user, loading, login, register, logout, setUser, setToken }),
+    () => ({ token, user, loading, login, register, logout, refreshUser, setUser, setToken, hasAccess, hasCourseAccess }),
     [token, user, loading]
   );
 

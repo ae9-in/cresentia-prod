@@ -8,27 +8,77 @@ import VerifyEmailPage from './pages/VerifyEmailPage';
 import CourseDetailPage from './pages/CourseDetailPage';
 import DashboardPage from './pages/DashboardPage';
 import AdminPage from './pages/AdminPage';
-import AssignmentPage from './pages/AssignmentPage';
 
 import { Routes, Route } from 'react-router-dom';
 
 const ProtectedRoute = ({ children, roles }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, hasAccess } = useAuth();
+  
   if (loading) return <div className="container">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
-  if (roles && !roles.includes(user.role)) return <Navigate to="/" replace />;
+  
+  // CRITICAL: Only blank screen for students with NO courses at all
+  // Do NOT blank screen individual course pages - let them handle access
+  if (user.role === 'student' && !hasAccess() && window.location.pathname === '/courses') {
+    return (
+      <div className="container page">
+        <div className="card empty-state">
+          <h2>No Courses Assigned</h2>
+          <p className="muted">You don't have any courses assigned yet. Please contact an administrator.</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (roles && !roles.includes(user.role)) {
+    // Redirect based on role
+    if (user.role === 'admin') return <Navigate to="/admin" replace />;
+    if (user.role === 'student') return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/" replace />;
+  }
+  
   return children;
 };
 
+const RoleBasedRedirect = () => {
+  const { user, loading, hasAccess } = useAuth();
+  
+  if (loading) return <div className="container">Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  
+  // Check if student has no assigned courses - show message
+  if (user.role === 'student' && !hasAccess()) {
+    return (
+      <div className="container page">
+        <div className="card empty-state">
+          <h2>No Courses Assigned</h2>
+          <p className="muted">You don't have any courses assigned yet. Please contact an administrator.</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Redirect based on role
+  if (user.role === 'admin') return <Navigate to="/admin" replace />;
+  if (user.role === 'student') return <Navigate to="/dashboard" replace />;
+  return <Navigate to="/login" replace />;
+};
+
 function App() {
+  const { user, hasAccess } = useAuth();
+  
+  // Don't render navbar for students with no assigned courses
+  const shouldShowNavbar = !user || user.role === 'admin' || (user.role === 'student' && hasAccess());
+  
   return (
     <>
-      <Navbar />
+      {shouldShowNavbar && <Navbar />}
       <Routes>
+        <Route path="/" element={<RoleBasedRedirect />} />
         <Route
-          path="/"
+          path="/courses"
           element={
-            <ProtectedRoute roles={['student', 'admin', 'instructor']}>
+            <ProtectedRoute roles={['student', 'admin']}>
               <HomePage />
             </ProtectedRoute>
           }
@@ -36,19 +86,18 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
-        <Route path="/courses/:id" element={<CourseDetailPage />} />
-        <Route
-          path="/courses/:id/assignment"
+        <Route 
+          path="/courses/:id" 
           element={
-            <ProtectedRoute roles={['student', 'admin', 'instructor']}>
-              <AssignmentPage />
+            <ProtectedRoute roles={['student', 'admin']}>
+              <CourseDetailPage />
             </ProtectedRoute>
-          }
+          } 
         />
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute roles={['student', 'admin', 'instructor']}>
+            <ProtectedRoute roles={['student']}>
               <DashboardPage />
             </ProtectedRoute>
           }
@@ -56,12 +105,12 @@ function App() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute roles={['admin', 'instructor']}>
+            <ProtectedRoute roles={['admin']}>
               <AdminPage />
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );

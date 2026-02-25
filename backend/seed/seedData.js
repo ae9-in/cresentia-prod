@@ -81,7 +81,7 @@ const generateUniqueQuiz = (baseQuiz) => {
   });
 };
 
-const courseSeed = (instructorId) => {
+const courseSeed = (adminId) => {
   const itQuiz = [
     {
       question: 'Which tag is used to create a hyperlink in HTML?',
@@ -354,7 +354,7 @@ const courseSeed = (instructorId) => {
   ];
 
   return categories.flatMap((cat) =>
-    cat.titles.map((title) => makeCourse(cat.name, cat.level, title, cat.description, instructorId, generateUniqueQuiz(cat.quiz)))
+    cat.titles.map((title) => makeCourse(cat.name, cat.level, title, cat.description, adminId, generateUniqueQuiz(cat.quiz)))
   );
 };
 
@@ -370,34 +370,45 @@ const seed = async () => {
   const users = await User.create([
     {
       name: 'Admin User',
-      email: 'admin@learnera.com',
-      password: 'Admin@123',
+      email: 'admin@gmail.com',
+      password: 'admin',
       role: 'admin',
-      isVerified: true
-    },
-    {
-      name: 'Instructor User',
-      email: 'instructor@learnera.com',
-      password: 'Instructor@123',
-      role: 'instructor',
-      isVerified: true
+      isVerified: true,
+      isActive: true
     },
     {
       name: 'Student User',
-      email: 'student@learnera.com',
-      password: 'Student@123',
+      email: 'student@gmail.com',
+      password: 'student',
       role: 'student',
-      isVerified: true
+      isVerified: true,
+      isActive: true,
+      assignedCourses: [] // Will be populated after courses are created
     }
   ]);
 
-  const instructor = users.find((u) => u.role === 'instructor');
-  await Course.insertMany(courseSeed(instructor._id));
+  const admin = users.find((u) => u.role === 'admin');
+  const student = users.find((u) => u.role === 'student');
+  
+  const courses = await Course.insertMany(courseSeed(admin._id));
+
+  // Assign first 3 courses to student as example
+  if (courses.length >= 3) {
+    student.assignedCourses = [courses[0]._id, courses[1]._id, courses[2]._id];
+    await student.save();
+    
+    // Auto-enroll student in assigned courses
+    await Enrollment.create([
+      { student: student._id, course: courses[0]._id },
+      { student: student._id, course: courses[1]._id },
+      { student: student._id, course: courses[2]._id }
+    ]);
+  }
 
   console.log('Seed complete');
-  console.log('Admin: admin@learnera.com / Admin@123');
-  console.log('Instructor: instructor@learnera.com / Instructor@123');
-  console.log('Student: student@learnera.com / Student@123');
+  console.log('Admin: admin@gmail.com / admin');
+  console.log('Student: student@gmail.com / student');
+  console.log(`Student has ${student.assignedCourses.length} courses assigned and enrolled`);
 
   await mongoose.connection.close();
 };

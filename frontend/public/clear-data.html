@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Login Data - Crescentia</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f4f2ed;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0a6a74;
+            margin-bottom: 10px;
+        }
+        button {
+            background: #0a6a74;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #054148;
+        }
+        .danger {
+            background: #ef4444;
+        }
+        .danger:hover {
+            background: #dc2626;
+        }
+        .success {
+            background: #10b981;
+        }
+        .success:hover {
+            background: #059669;
+        }
+        .message {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            display: none;
+        }
+        .message.show {
+            display: block;
+        }
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        .message.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+        .info-box {
+            background: #f0f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #0a6a74;
+        }
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗑️ Clear Login Data</h1>
+        <p>Use this page to clear all stored login data from your browser.</p>
+
+        <div id="message" class="message"></div>
+
+        <div class="info-box">
+            <strong>What will be cleared:</strong>
+            <ul>
+                <li>JWT authentication token</li>
+                <li>User information</li>
+                <li>Theme preferences</li>
+                <li>All cached data</li>
+            </ul>
+        </div>
+
+        <h3>Actions:</h3>
+        
+        <button onclick="clearLocalStorage()">
+            Clear localStorage
+        </button>
+
+        <button onclick="clearSessionStorage()">
+            Clear sessionStorage
+        </button>
+
+        <button class="danger" onclick="clearAll()">
+            Clear Everything
+        </button>
+
+        <button class="success" onclick="goToLogin()">
+            Go to Login
+        </button>
+
+        <div class="info-box" style="margin-top: 20px;">
+            <strong>Current Storage:</strong>
+            <div id="storage-info" style="margin-top: 10px;"></div>
+        </div>
+    </div>
+
+    <script>
+        function showMessage(text, type = 'success') {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type} show`;
+            setTimeout(() => {
+                msg.className = 'message';
+            }, 3000);
+        }
+
+        function updateStorageInfo() {
+            const info = document.getElementById('storage-info');
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            const theme = localStorage.getItem('theme');
+            
+            info.innerHTML = `
+                <p><strong>Token:</strong> ${token ? '✅ Present' : '❌ Not found'}</p>
+                <p><strong>User:</strong> ${user ? '✅ Present' : '❌ Not found'}</p>
+                <p><strong>Theme:</strong> ${theme || '❌ Not set'}</p>
+                <p><strong>Total items:</strong> ${localStorage.length}</p>
+            `;
+        }
+
+        function clearLocalStorage() {
+            localStorage.clear();
+            showMessage('✅ localStorage cleared successfully!');
+            updateStorageInfo();
+        }
+
+        function clearSessionStorage() {
+            sessionStorage.clear();
+            showMessage('✅ sessionStorage cleared successfully!');
+        }
+
+        function clearAll() {
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // Clear cookies
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            showMessage('✅ All data cleared! Reloading page...', 'success');
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        }
+
+        function goToLogin() {
+            window.location.href = '/';
+        }
+
+        // Update storage info on load
+        updateStorageInfo();
+    </script>
+</body>
+</html>

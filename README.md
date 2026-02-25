@@ -1,6 +1,6 @@
-# Learnera
+# Crescentia
 
-Learnera is a Coursera-like learning platform with authentication, role-based access, course streaming, assessments, progress tracking, reviews, search autocomplete, and completion certificate PDF download.
+Crescentia is a modern learning platform with authentication, role-based access, course streaming, assessments, progress tracking, reviews, search autocomplete, and completion certificate PDF download.
 
 ## Tech Stack
 
@@ -25,12 +25,12 @@ Learnera is a Coursera-like learning platform with authentication, role-based ac
 - Password hashing with bcrypt
 - Email verification flow (SMTP supported; console fallback if SMTP is not configured)
 - JWT auth + protected routes
-- Roles: `student`, `admin`, `instructor`
+- Roles: `student`, `admin`
 - Course categories, listing, detail, search, filters, autocomplete
 - Video lessons and assessment (15-minute timer in frontend)
 - User enrollment and progress tracking
 - Ratings and reviews
-- Admin/Instructor panel for creating/updating courses
+- Admin panel for creating/updating courses
 - Student dashboard
 - Completion certificate download as `.pdf`
 - Bonus: dark/light theme toggle
@@ -75,9 +75,8 @@ npm run seed
 
 Seed users:
 
-- Admin: `admin@learnera.com` / `Admin@123`
-- Instructor: `instructor@learnera.com` / `Instructor@123`
-- Student: `student@learnera.com` / `Student@123`
+- Admin: `admin@crescentia.com` / `Admin@123`
+- Student: `student@crescentia.com` / `Student@123`
 
 ## Run Application
 
@@ -112,8 +111,8 @@ Open: `http://localhost:5173`
 - `GET /api/courses/search?q=...&category=...&level=...`
 - `GET /api/courses/categories`
 - `GET /api/courses/:id`
-- `POST /api/courses` (admin/instructor)
-- `PUT /api/courses/:id` (admin/instructor)
+- `POST /api/courses` (admin only)
+- `PUT /api/courses/:id` (admin only)
 - `POST /api/courses/:id/reviews`
 
 ### Enrollment

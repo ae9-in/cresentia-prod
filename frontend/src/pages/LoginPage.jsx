@@ -24,7 +24,7 @@ const LoginPage = () => {
       <section className="auth-shell">
         <div className="auth-panel">
           <div className="auth-brand">
-            <span className="brand-pill">Learnera</span>
+            <span className="brand-pill">Crescentia</span>
             <h1>Welcome back.</h1>
             <p>
               Sign in to continue your learning journey, track progress, and earn certificates that stand out.

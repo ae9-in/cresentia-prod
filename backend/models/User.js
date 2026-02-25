@@ -8,12 +8,27 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     role: {
       type: String,
-      enum: ['student', 'admin', 'instructor'],
+      enum: ['student', 'admin'],
       default: 'student'
     },
     isVerified: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: true },
     verificationToken: { type: String },
-    verificationTokenExpires: { type: Date }
+    verificationTokenExpires: { type: Date },
+    
+    // Assigned courses (admin manually assigns)
+    assignedCourses: [{ 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'Course' 
+    }],
+    
+    // Progress tracking
+    progress: [{
+      courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
+      completedModules: [{ type: mongoose.Schema.Types.ObjectId }],
+      lastAccessedAt: { type: Date },
+      progressPercent: { type: Number, default: 0 }
+    }]
   },
   { timestamps: true }
 );

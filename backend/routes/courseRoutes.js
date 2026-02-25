@@ -12,12 +12,12 @@ import { protect, authorizeRoles } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/', listCourses);
-router.get('/search', searchCourses);
+router.get('/', protect, listCourses);
+router.get('/search', protect, searchCourses);
 router.get('/categories', categories);
-router.get('/:id', getCourseById);
-router.post('/', protect, authorizeRoles('admin', 'instructor'), createCourse);
-router.put('/:id', protect, authorizeRoles('admin', 'instructor'), updateCourse);
-router.post('/:id/reviews', protect, authorizeRoles('student', 'admin', 'instructor'), addReview);
+router.get('/:id', protect, getCourseById);
+router.post('/', protect, authorizeRoles('admin'), createCourse);
+router.put('/:id', protect, authorizeRoles('admin'), updateCourse);
+router.post('/:id/reviews', protect, authorizeRoles('student', 'admin'), addReview);
 
 export default router;

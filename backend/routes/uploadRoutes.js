@@ -4,7 +4,7 @@ import { protect, authorizeRoles } from '../middlewares/authMiddleware.js';
 const router = express.Router();
 
 // Cloudinary video upload endpoint (simplified - just returns the Cloudinary URL)
-router.post('/videos', protect, authorizeRoles('admin', 'instructor'), (req, res) => {
+router.post('/videos', protect, authorizeRoles('admin'), (req, res) => {
   const { cloudinaryUrl } = req.body;
 
   if (!cloudinaryUrl) {
@@ -24,7 +24,7 @@ router.post('/videos', protect, authorizeRoles('admin', 'instructor'), (req, res
 });
 
 // Helper endpoint to get Cloudinary upload instructions
-router.get('/cloudinary-info', protect, authorizeRoles('admin', 'instructor'), (req, res) => {
+router.get('/cloudinary-info', protect, authorizeRoles('admin'), (req, res) => {
   res.json({
     message: 'Video Upload Instructions',
     instructions: [

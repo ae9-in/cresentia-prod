@@ -109,7 +109,7 @@ const AssignmentPage = () => {
             {quizResult && <p className="success">Score: {quizResult.score}%</p>}
           </>
         ) : (
-          <p>Enroll and login as a student/instructor/admin to take this assignment.</p>
+          <p>Enroll and login as a student or admin to take this assignment.</p>
         )}
       </section>
     </main>
