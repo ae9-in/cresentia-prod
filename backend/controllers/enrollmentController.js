@@ -255,6 +255,7 @@ const submitQuiz = asyncHandler(async (req, res) => {
   res.json({
     message: 'Quiz submitted',
     score: percentage,
+    passed: percentage >= 70,
     progressPercent: enrollment.progressPercent
   });
 });
@@ -271,30 +272,53 @@ const downloadCertificate = asyncHandler(async (req, res) => {
     course: course._id
   });
 
-  if (!enrollment || enrollment.progressPercent < 100) {
-    res.status(400);
-    throw new Error('Course not completed yet');
+  if (!enrollment) {
+    res.status(404);
+    throw new Error('Enrollment not found');
   }
 
-  const filename = `certificate-${course.title.replace(/\s+/g, '-').toLowerCase()}.pdf`;
+  // Check if quiz was passed (≥70%)
+  if (!enrollment.quizSubmittedAt || enrollment.quizScore < 70) {
+    res.status(400);
+    throw new Error('You must pass the assessment with at least 70% to download the certificate');
+  }
+
+  const filename = `crescentia-certificate-${course.title.replace(/\s+/g, '-').toLowerCase()}.pdf`;
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 
-  const doc = new PDFDocument({ size: 'A4', margin: 50 });
+  const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 50 });
   doc.pipe(res);
 
-  doc.fontSize(28).text('Crescentia Certificate', { align: 'center' });
+  // Certificate border
+  doc.rect(30, 30, doc.page.width - 60, doc.page.height - 60).stroke();
+  doc.rect(35, 35, doc.page.width - 70, doc.page.height - 70).stroke();
+
+  // Header
   doc.moveDown(2);
-  doc.fontSize(16).text('This certifies that', { align: 'center' });
-  doc.moveDown();
-  doc.fontSize(24).text(req.user.name, { align: 'center' });
-  doc.moveDown();
-  doc.fontSize(16).text('has successfully completed the course', { align: 'center' });
-  doc.moveDown();
-  doc.fontSize(22).text(course.title, { align: 'center' });
+  doc.fontSize(36).font('Helvetica-Bold').fillColor('#0a6a74').text('CRESCENTIA', { align: 'center' });
+  doc.moveDown(0.5);
+  doc.fontSize(20).font('Helvetica').fillColor('#000').text('Certificate of Completion', { align: 'center' });
+  
+  // Body
   doc.moveDown(2);
-  doc.fontSize(12).text(`Completed on: ${enrollment.completedAt.toDateString()}`, { align: 'center' });
-  doc.text(`Quiz score: ${enrollment.quizScore}%`, { align: 'center' });
+  doc.fontSize(14).text('This is to certify that', { align: 'center' });
+  doc.moveDown(0.5);
+  doc.fontSize(28).font('Helvetica-Bold').fillColor('#0a6a74').text(req.user.name, { align: 'center' });
+  doc.moveDown(0.5);
+  doc.fontSize(14).font('Helvetica').fillColor('#000').text('has successfully completed the course', { align: 'center' });
+  doc.moveDown(0.5);
+  doc.fontSize(20).font('Helvetica-Bold').text(course.title, { align: 'center' });
+  
+  // Footer
+  doc.moveDown(2);
+  const completionDate = enrollment.quizSubmittedAt || enrollment.completedAt || new Date();
+  doc.fontSize(12).font('Helvetica').text(`Completion Date: ${completionDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, { align: 'center' });
+  doc.moveDown(0.3);
+  doc.text(`Assessment Score: ${enrollment.quizScore}%`, { align: 'center' });
+  doc.moveDown(0.3);
+  doc.fontSize(10).fillColor('#666').text(`Certificate ID: ${enrollment._id}`, { align: 'center' });
+  
   doc.end();
 });
 

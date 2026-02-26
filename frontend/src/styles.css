@@ -2329,3 +2329,98 @@ button:hover {
     width: 100%;
   }
 }
+
+/* Course Page - Video Playlist */
+.video-playlist-item:hover {
+  background: rgba(10, 106, 116, 0.08) !important;
+  border-color: var(--brand) !important;
+}
+
+/* Quiz Option Hover */
+.quiz-option:hover {
+  background: rgba(10, 106, 116, 0.03);
+  border-color: var(--brand);
+}
+
+/* Responsive Course Page */
+@media (max-width: 968px) {
+  /* Stack video and sidebar on mobile */
+  main > div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+/* Assessment Page Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Quiz Option Hover Effects */
+.quiz-option {
+  position: relative;
+}
+
+.quiz-option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  border-radius: 12px;
+}
+
+.quiz-option:hover::before {
+  opacity: 1;
+}
+
+/* Glassmorphism Effect */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Timer Warning Animation */
+@keyframes timerPulse {
+  0%, 100% {
+    text-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+  }
+  50% {
+    text-shadow: 0 0 30px rgba(239, 68, 68, 1);
+  }
+}
+
+/* Selected Option Glow */
+@keyframes selectedGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+}

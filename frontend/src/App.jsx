@@ -6,6 +6,8 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import CourseDetailPage from './pages/CourseDetailPage';
+import CoursePage from './pages/CoursePage';
+import AssessmentPage from './pages/AssessmentPage';
 import DashboardPage from './pages/DashboardPage';
 import AdminPage from './pages/AdminPage';
 
@@ -90,7 +92,15 @@ function App() {
           path="/courses/:id" 
           element={
             <ProtectedRoute roles={['student', 'admin']}>
-              <CourseDetailPage />
+              <CoursePage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/courses/:id/assessment" 
+          element={
+            <ProtectedRoute roles={['student', 'admin']}>
+              <AssessmentPage />
             </ProtectedRoute>
           } 
         />
