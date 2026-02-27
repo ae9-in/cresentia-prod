@@ -7,20 +7,75 @@ const DashboardPage = () => {
   const { user, hasAccess } = useAuth();
   const [enrollments, setEnrollments] = useState([]);
   const [stats, setStats] = useState({ total: 0, inProgress: 0, completed: 0, avgProgress: 0 });
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const loadEnrollments = () => {
+    console.log('🔄 Loading enrollments for user:', user?.email);
+    api.get('/enrollments')
+      .then((res) => {
+        console.log('✅ Enrollments loaded:', res.data.length);
+        console.log('Enrollments:', res.data);
+        const data = res.data;
+        setEnrollments(data);
+        
+        // Calculate stats
+        const total = data.length;
+        const completed = data.filter(e => e.progressPercent === 100).length;
+        const inProgress = data.filter(e => e.progressPercent > 0 && e.progressPercent < 100).length;
+        const avgProgress = total > 0 ? Math.round(data.reduce((sum, e) => sum + e.progressPercent, 0) / total) : 0;
+        
+        setStats({ total, inProgress, completed, avgProgress });
+        console.log('📊 Stats:', { total, inProgress, completed, avgProgress });
+      })
+      .catch((err) => {
+        console.error('❌ Failed to load enrollments:', err);
+        setEnrollments([]);
+      });
+  };
 
   useEffect(() => {
-    api.get('/enrollments').then((res) => {
-      const data = res.data;
-      setEnrollments(data);
-      
-      // Calculate stats
-      const total = data.length;
-      const completed = data.filter(e => e.progressPercent === 100).length;
-      const inProgress = data.filter(e => e.progressPercent > 0 && e.progressPercent < 100).length;
-      const avgProgress = total > 0 ? Math.round(data.reduce((sum, e) => sum + e.progressPercent, 0) / total) : 0;
-      
-      setStats({ total, inProgress, completed, avgProgress });
-    });
+    console.log('🔄 Initial load - DashboardPage mounted');
+    loadEnrollments();
+  }, []);
+
+  // Reload enrollments when user's assignedCourses change
+  // Create a stable key from the course IDs
+  const coursesKey = user?.assignedCourses?.map(c => 
+    typeof c === 'object' ? c._id : c
+  ).join(',') || '';
+  
+  useEffect(() => {
+    if (coursesKey) {
+      console.log('🔄 User assignedCourses changed, reloading enrollments');
+      console.log('Current courses:', user?.assignedCourses?.length || 0);
+      console.log('Courses key:', coursesKey);
+      loadEnrollments();
+    }
+  }, [coursesKey]);
+
+  // Listen for storage events (when admin updates user in another tab/component)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'user' && e.newValue) {
+        console.log('🔄 User data changed in sessionStorage, reloading enrollments');
+        loadEnrollments();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom event within same tab
+    const handleUserUpdate = () => {
+      console.log('🔄 User update event received, reloading enrollments');
+      loadEnrollments();
+    };
+    
+    window.addEventListener('userUpdated', handleUserUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('userUpdated', handleUserUpdate);
+    };
   }, []);
 
   const downloadCertificate = async (courseId) => {

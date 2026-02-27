@@ -18,6 +18,6 @@ router.get('/categories', categories);
 router.get('/:id', protect, getCourseById);
 router.post('/', protect, authorizeRoles('admin'), createCourse);
 router.put('/:id', protect, authorizeRoles('admin'), updateCourse);
-router.post('/:id/reviews', protect, authorizeRoles('student', 'admin'), addReview);
+router.post('/:id/reviews', protect, authorizeRoles('user', 'student', 'admin'), addReview);
 
 export default router;

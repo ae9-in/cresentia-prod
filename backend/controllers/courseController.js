@@ -21,10 +21,12 @@ const listCourses = asyncHandler(async (req, res) => {
     ];
   }
 
-  // Filter by assigned courses for students
-  if (req.user && req.user.role === 'student') {
+  // Admin sees all courses, instructors see only their own, users see assigned courses
+  if (req.user && req.user.role === 'instructor') {
+    query.createdBy = req.user._id;
+  } else if (req.user && req.user.role === 'user') {
     query._id = { $in: req.user.assignedCourses };
-    query.isPublished = true; // Students only see published courses
+    query.isPublished = true;
   }
 
   // Admins see all courses (published and unpublished)
@@ -80,8 +82,12 @@ const getCourseById = asyncHandler(async (req, res) => {
   console.log('📖 Quiz questions count:', course.quizQuestions?.length || 0);
   console.log('📖 Modules count:', course.modules?.length || 0);
 
-  // Check if student has access to this course
-  if (req.user && req.user.role === 'student') {
+  // Check access based on role
+  if (req.user && req.user.role === 'instructor') {
+    if (course.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Access denied. You can only view courses you created.' });
+    }
+  } else if (req.user && req.user.role === 'user') {
     const hasAccess = req.user.assignedCourses.some(
       assignedCourse => {
         const assignedId = typeof assignedCourse === 'object' ? assignedCourse._id : assignedCourse;
@@ -89,19 +95,8 @@ const getCourseById = asyncHandler(async (req, res) => {
       }
     );
     
-    console.log('🔐 Access Check Details:');
-    console.log('   - Has Access:', hasAccess);
-    console.log('   - Is Published:', course.isPublished);
-    console.log('   - Assigned Course IDs:', req.user.assignedCourses.map(c => 
-      typeof c === 'object' ? c._id.toString() : c.toString()
-    ));
-    console.log('   - Requested Course ID:', course._id.toString());
-    
     if (!hasAccess || !course.isPublished) {
-      console.log('🚫 Access denied - returning 403');
-      console.log('========================================\n');
-      res.status(403);
-      throw new Error('You do not have access to this course. Please contact an administrator.');
+      return res.status(403).json({ message: 'You do not have access to this course. Please contact an administrator.' });
     }
   }
 
@@ -163,8 +158,10 @@ const searchCourses = asyncHandler(async (req, res) => {
   if (category) query.category = category;
   if (level) query.level = level;
 
-  // Filter by assigned courses for students
-  if (req.user && req.user.role === 'student') {
+  // Filter by created courses for instructors, assigned courses for users
+  if (req.user && req.user.role === 'instructor') {
+    query.createdBy = req.user._id;
+  } else if (req.user && req.user.role === 'user') {
     query._id = { $in: req.user.assignedCourses };
     query.isPublished = true;
   }
@@ -172,7 +169,9 @@ const searchCourses = asyncHandler(async (req, res) => {
   const courses = await Course.find(query).select('title category level ratingAverage');
   
   const autocompleteQuery = { title: { $regex: `^${safeQ}`, $options: 'i' } };
-  if (req.user && req.user.role === 'student') {
+  if (req.user && req.user.role === 'instructor') {
+    autocompleteQuery.createdBy = req.user._id;
+  } else if (req.user && req.user.role === 'user') {
     autocompleteQuery._id = { $in: req.user.assignedCourses };
     autocompleteQuery.isPublished = true;
   }

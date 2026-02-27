@@ -3,7 +3,7 @@ import { generateToken } from '../utils/jwtUtils.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
 const register = asyncHandler(async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password } = req.body;
   if (!name || !email || !password) {
     return res.status(400).json({ message: 'name, email, and password are required' });
   }
@@ -13,12 +13,13 @@ const register = asyncHandler(async (req, res) => {
     return res.status(409).json({ message: 'User with this email already exists' });
   }
 
-  const allowedPublicRoles = ['student'];
+  // All new registrations are regular users by default
+  // Admin and instructors must be created by admin
   const user = await User.create({
     name,
     email: email.toLowerCase(),
     password,
-    role: role && allowedPublicRoles.includes(role) ? role : 'student',
+    role: 'user',
     isVerified: true
   });
 

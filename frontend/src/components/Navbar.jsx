@@ -3,9 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { useEffect, useState } from 'react';
 
 const Navbar = () => {
-  const { user, logout, refreshUser } = useAuth();
+  const { user, logout } = useAuth();
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
-  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,12 +18,6 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await refreshUser();
-    setRefreshing(false);
-  };
-
   return (
     <header className="topbar">
       <div className="container topbar-content">
@@ -32,7 +25,7 @@ const Navbar = () => {
           Crescentia
         </Link>
         <nav className="nav-links">
-          {user && user.role === 'student' && (
+          {user && user.role === 'user' && (
             <>
               <NavLink to="/courses">Courses</NavLink>
               <NavLink to="/dashboard">Dashboard</NavLink>
@@ -41,6 +34,12 @@ const Navbar = () => {
           {user && user.role === 'admin' && (
             <>
               <NavLink to="/admin">Admin Panel</NavLink>
+              <NavLink to="/courses">Browse Courses</NavLink>
+            </>
+          )}
+          {user && user.role === 'instructor' && (
+            <>
+              <NavLink to="/instructor">My Courses</NavLink>
               <NavLink to="/courses">Browse Courses</NavLink>
             </>
           )}
@@ -57,15 +56,6 @@ const Navbar = () => {
           {!user && <Link to="/register">Register</Link>}
           {user && (
             <>
-              <button 
-                className="ghost-btn" 
-                onClick={handleRefresh} 
-                type="button"
-                disabled={refreshing}
-                title="Refresh your course assignments"
-              >
-                {refreshing ? '⟳' : '↻'} Refresh
-              </button>
               <span className="user-pill">👤 {user.name}</span>
               <button 
                 className="primary-btn logout-btn" 

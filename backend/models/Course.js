@@ -122,7 +122,8 @@ const courseSchema = new mongoose.Schema(
     
     durationMinutes: { type: Number, default: 0 },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    assignedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // NEW: Track assigned users
+    assignedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    studentsAssigned: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Track assigned students
     reviews: { type: [reviewSchema], default: [] },
     ratingAverage: { type: Number, default: 0 }
   },

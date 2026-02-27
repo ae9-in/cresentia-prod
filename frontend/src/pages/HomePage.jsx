@@ -15,19 +15,34 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const { user, refreshUser, hasAccess } = useAuth();
 
+  // Create a stable key from the course IDs
+  const coursesKey = user?.assignedCourses?.map(c => 
+    typeof c === 'object' ? c._id : c
+  ).join(',') || '';
+
   useEffect(() => {
     const params = {};
     if (selectedCategory !== 'All') params.category = selectedCategory;
     if (selectedLevel !== 'All') params.level = selectedLevel;
     if (query) params.q = query;
 
+    console.log('🔄 HomePage: Fetching courses');
+    console.log('User role:', user?.role);
+    console.log('Assigned courses:', user?.assignedCourses?.length);
+    
     setLoading(true);
     api
       .get('/courses', { params })
-      .then((res) => setCourses(res.data))
-      .catch(() => setCourses([]))
+      .then((res) => {
+        console.log('✅ HomePage: Courses loaded:', res.data.length);
+        setCourses(res.data);
+      })
+      .catch((err) => {
+        console.error('❌ HomePage: Failed to load courses:', err);
+        setCourses([]);
+      })
       .finally(() => setLoading(false));
-  }, [selectedCategory, selectedLevel, query, user?.assignedCourses]); // Re-fetch when assignedCourses changes
+  }, [selectedCategory, selectedLevel, query, coursesKey]); // Re-fetch when coursesKey changes
 
   useEffect(() => {
     if (!query) {

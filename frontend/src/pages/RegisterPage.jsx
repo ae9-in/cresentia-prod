@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 const RegisterPage = () => {
   const { register, login } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'student' });
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -58,7 +58,7 @@ const RegisterPage = () => {
         <form className="auth-form card" onSubmit={submit}>
           <div>
             <h2>Create Account</h2>
-            <p className="muted">Join Crescentia to access courses and certificates.</p>
+            <p className="muted">Join Crescentia to access courses and start learning.</p>
           </div>
           {message && <p className="success">{message}</p>}
           {error && <p className="error">{error}</p>}
@@ -96,7 +96,7 @@ const RegisterPage = () => {
             />
           </label>
           <button className="primary-btn" type="submit" disabled={loading}>
-            {loading ? 'Creating Account...' : 'Register'}
+            {loading ? 'Creating Account...' : 'Register as User'}
           </button>
           
           <p className="muted">

@@ -80,6 +80,29 @@ const CoursePage = () => {
     }
   }, [course, fetchEnrollment]);
 
+  // OPTIMIZATION: Preload next video for faster switching
+  useEffect(() => {
+    if (!course?.videos || currentVideoIndex >= course.videos.length - 1) return;
+    
+    const nextVideo = course.videos[currentVideoIndex + 1];
+    if (nextVideo?.url) {
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.as = 'video';
+      link.href = nextVideo.url;
+      link.type = 'video/mp4';
+      document.head.appendChild(link);
+      
+      return () => {
+        try {
+          document.head.removeChild(link);
+        } catch (e) {
+          // Link already removed or doesn't exist
+        }
+      };
+    }
+  }, [currentVideoIndex, course]);
+
   // Enroll in course
   const handleEnroll = async () => {
     try {
@@ -327,6 +350,8 @@ const CoursePage = () => {
               <video
                 key={videoUrl}
                 controls
+                preload="metadata"
+                poster={currentVideo.thumbnailUrl || undefined}
                 style={{ width: '100%', aspectRatio: '16/9', background: '#000' }}
                 onEnded={handleVideoEnd}
                 src={videoUrl}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 const emptyCourse = {
@@ -14,11 +15,12 @@ const emptyUser = {
   name: '',
   email: '',
   password: '',
-  role: 'student'
+  role: 'user'
 };
 
 const AdminPage = () => {
-  const [activeTab, setActiveTab] = useState('analytics'); // 'analytics', 'courses', or 'users'
+  const { user, refreshUser, setUser } = useAuth();
+  const [activeTab, setActiveTab] = useState(user?.role === 'user' ? 'courses' : 'analytics');
   const [courses, setCourses] = useState([]);
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState(null);
@@ -37,12 +39,24 @@ const AdminPage = () => {
     api.get('/courses').then((res) => setCourses(res.data));
   };
 
-  const loadUsers = () => {
-    api.get('/admin/users').then((res) => setUsers(res.data));
+  const loadUsers = async () => {
+    if (user?.role === 'admin') {
+      try {
+        const res = await api.get('/admin/users');
+        console.log('✅ Users loaded:', res.data.length);
+        setUsers(res.data);
+        return res.data;
+      } catch (err) {
+        console.error('❌ Failed to load users:', err);
+        return [];
+      }
+    }
   };
 
   const loadStats = () => {
-    api.get('/admin/stats').then((res) => setStats(res.data));
+    if (user?.role === 'admin') {
+      api.get('/admin/stats').then((res) => setStats(res.data));
+    }
   };
 
   useEffect(() => {
@@ -197,23 +211,30 @@ const AdminPage = () => {
     setMessage('');
 
     try {
+      let response;
       if (editingUserId) {
-        await api.put(`/admin/users/${editingUserId}`, userForm);
+        response = await api.put(`/admin/users/${editingUserId}`, userForm);
         setMessage('User updated successfully');
       } else {
-        await api.post('/admin/users', userForm);
+        response = await api.post('/admin/users', userForm);
         setMessage('User created successfully');
       }
 
       setEditingUserId('');
       setUserForm(emptyUser);
-      loadUsers();
-      loadStats();
+      
+      // Reload users list immediately
+      await loadUsers();
+      await loadStats();
       
       // Scroll to top to see success message
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // Clear message after 3 seconds
+      setTimeout(() => setMessage(''), 3000);
     } catch (err) {
       setMessage(err.response?.data?.message || 'Operation failed');
+      setTimeout(() => setMessage(''), 3000);
     }
   };
 
@@ -238,10 +259,12 @@ const AdminPage = () => {
     try {
       await api.delete(`/admin/users/${userId}`);
       setMessage('User deleted successfully');
-      loadUsers();
-      loadStats();
+      await loadUsers();
+      await loadStats();
+      setTimeout(() => setMessage(''), 3000);
     } catch (err) {
       setMessage(err.response?.data?.message || 'Failed to delete user');
+      setTimeout(() => setMessage(''), 3000);
     }
   };
 
@@ -249,17 +272,22 @@ const AdminPage = () => {
     try {
       const { data } = await api.patch(`/admin/users/${userId}/toggle-status`);
       setMessage(data.message);
-      await loadUsers();
+      
+      // Reload users list
+      const updatedUsers = await loadUsers();
       
       // Update selectedUser if it's the one being toggled
       if (selectedUser && selectedUser._id === userId) {
-        const updatedUser = users.find(u => u._id === userId);
+        const updatedUser = updatedUsers?.find(u => u._id === userId);
         if (updatedUser) {
           setSelectedUser(updatedUser);
         }
       }
+      
+      setTimeout(() => setMessage(''), 3000);
     } catch (err) {
       setMessage(err.response?.data?.message || 'Failed to toggle user status');
+      setTimeout(() => setMessage(''), 3000);
     }
   };
 
@@ -274,37 +302,55 @@ const AdminPage = () => {
       console.log('🎯 Assigning Course');
       console.log('========================================');
       console.log('User ID:', selectedUser._id);
+      console.log('User Email:', selectedUser.email);
       console.log('Course ID:', courseId);
+      console.log('Current logged-in user:', user?.email);
       
       const { data } = await api.post(`/admin/users/${selectedUser._id}/assign-course`, { courseId });
       
       console.log('✅ Course Assigned Successfully');
       console.log('Updated User:', data.user);
+      console.log('Updated User Courses:', data.user.assignedCourses?.length);
       console.log('========================================\n');
       
       setMessage(data.message);
       
-      // CRITICAL: Update users list
-      await loadUsers();
-      
-      // CRITICAL: Update selectedUser with fresh data from backend
+      // CRITICAL: Update selectedUser FIRST with fresh data from backend
       if (data.user) {
         setSelectedUser(data.user);
+        console.log('✅ Selected user updated in modal');
       }
       
-      // CRITICAL: If the logged-in user is being modified, refresh their context
-      // This ensures immediate access without logout/login
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      if (currentUser._id === selectedUser._id) {
-        console.log('🔄 Refreshing logged-in user context');
-        // Update localStorage
-        localStorage.setItem('user', JSON.stringify(data.user));
-        // Trigger a page reload to refresh context
-        window.location.reload();
+      // Update users list in background
+      loadUsers().then(() => {
+        console.log('✅ Users list reloaded');
+      });
+      
+      // CRITICAL: If the logged-in user is being modified, update their context immediately
+      if (user && user._id === selectedUser._id) {
+        console.log('🔄 Updating logged-in user context - SAME USER!');
+        console.log('Before update - user courses:', user.assignedCourses?.length);
+        console.log('After update - user courses:', data.user.assignedCourses?.length);
+        
+        // Update sessionStorage
+        sessionStorage.setItem('user', JSON.stringify(data.user));
+        
+        // Update AuthContext state directly with the data we already have
+        setUser(data.user);
+        
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new Event('userUpdated'));
+        
+        console.log('✅ User context updated successfully');
       }
+      
+      // Clear message after 3 seconds
+      setTimeout(() => setMessage(''), 3000);
+      
     } catch (err) {
       console.error('❌ Failed to assign course:', err);
       setMessage(err.response?.data?.message || 'Failed to assign course');
+      setTimeout(() => setMessage(''), 3000);
     }
   };
 
@@ -324,26 +370,36 @@ const AdminPage = () => {
       
       setMessage(data.message);
       
-      // CRITICAL: Update users list
-      await loadUsers();
-      
-      // CRITICAL: Update selectedUser with fresh data from backend
+      // CRITICAL: Update selectedUser FIRST with fresh data from backend
       if (data.user) {
         setSelectedUser(data.user);
+        console.log('✅ Selected user updated in modal');
       }
       
-      // CRITICAL: If the logged-in user is being modified, refresh their context
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      if (currentUser._id === selectedUser._id) {
-        console.log('🔄 Refreshing logged-in user context');
-        // Update localStorage
-        localStorage.setItem('user', JSON.stringify(data.user));
-        // Trigger a page reload to refresh context
-        window.location.reload();
+      // Update users list in background
+      loadUsers().then(() => {
+        console.log('✅ Users list reloaded');
+      });
+      
+      // CRITICAL: If the logged-in user is being modified, update their context immediately
+      if (user && user._id === selectedUser._id) {
+        console.log('🔄 Updating logged-in user context');
+        // Update sessionStorage
+        sessionStorage.setItem('user', JSON.stringify(data.user));
+        // Update AuthContext state directly with the data we already have
+        setUser(data.user);
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new Event('userUpdated'));
+        console.log('✅ User context updated successfully');
       }
+      
+      // Clear message after 3 seconds
+      setTimeout(() => setMessage(''), 3000);
+      
     } catch (err) {
       console.error('❌ Failed to remove course:', err);
       setMessage(err.response?.data?.message || 'Failed to remove course');
+      setTimeout(() => setMessage(''), 3000);
     }
   };
 
@@ -382,31 +438,35 @@ const AdminPage = () => {
 
       {/* Tab Navigation */}
       <div className="admin-tabs">
-        <button
-          className={activeTab === 'analytics' ? 'tab-active' : 'tab-inactive'}
-          onClick={() => setActiveTab('analytics')}
-          type="button"
-        >
-          Analytics
-        </button>
+        {user?.role === 'admin' && (
+          <button
+            className={activeTab === 'analytics' ? 'tab-active' : 'tab-inactive'}
+            onClick={() => setActiveTab('analytics')}
+            type="button"
+          >
+            Analytics
+          </button>
+        )}
         <button
           className={activeTab === 'courses' ? 'tab-active' : 'tab-inactive'}
           onClick={() => setActiveTab('courses')}
           type="button"
         >
-          Course Management
+          {user?.role === 'instructor' ? 'My Uploaded Courses' : 'Course Management'}
         </button>
-        <button
-          className={activeTab === 'users' ? 'tab-active' : 'tab-inactive'}
-          onClick={() => setActiveTab('users')}
-          type="button"
-        >
-          User Management
-        </button>
+        {user?.role === 'admin' && (
+          <button
+            className={activeTab === 'users' ? 'tab-active' : 'tab-inactive'}
+            onClick={() => setActiveTab('users')}
+            type="button"
+          >
+            User Management
+          </button>
+        )}
       </div>
 
-      {/* Analytics Tab */}
-      {activeTab === 'analytics' && stats && (
+      {/* Analytics Tab - Admin Only */}
+      {activeTab === 'analytics' && user?.role === 'admin' && stats && (
         <section className="analytics-section">
           <div className="stats-grid">
             <div className="stat-card">
@@ -429,9 +489,9 @@ const AdminPage = () => {
             </div>
             <div className="stat-card">
               <div className="stat-value">
-                {stats.usersByRole?.find(r => r._id === 'student')?.count || 0}
+                {stats.usersByRole?.find(r => r._id === 'user')?.count || 0}
               </div>
-              <div className="stat-label">Students</div>
+              <div className="stat-label">Users</div>
             </div>
           </div>
 
@@ -599,8 +659,8 @@ const AdminPage = () => {
               required={!editingUserId}
             />
             <select value={userForm.role} onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}>
-              <option value="student">Student</option>
-              <option value="admin">Admin</option>
+              <option value="user">User</option>
+              <option value="instructor">Instructor</option>
             </select>
             <button className="primary-btn" type="submit">
               {editingUserId ? 'Update User' : 'Create User'}

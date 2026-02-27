@@ -19,23 +19,16 @@ const ProtectedRoute = ({ children, roles }) => {
   if (loading) return <div className="container">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
   
-  // CRITICAL: Only blank screen for students with NO courses at all
-  // Do NOT blank screen individual course pages - let them handle access
-  if (user.role === 'student' && !hasAccess() && window.location.pathname === '/courses') {
-    return (
-      <div className="container page">
-        <div className="card empty-state">
-          <h2>No Courses Assigned</h2>
-          <p className="muted">You don't have any courses assigned yet. Please contact an administrator.</p>
-        </div>
-      </div>
-    );
+  // Check if user has no assigned courses
+  if (user.role === 'user' && !hasAccess() && window.location.pathname !== '/dashboard') {
+    return <Navigate to="/dashboard" replace />;
   }
   
   if (roles && !roles.includes(user.role)) {
     // Redirect based on role
     if (user.role === 'admin') return <Navigate to="/admin" replace />;
-    if (user.role === 'student') return <Navigate to="/dashboard" replace />;
+    if (user.role === 'instructor') return <Navigate to="/instructor" replace />;
+    if (user.role === 'user') return <Navigate to="/dashboard" replace />;
     return <Navigate to="/" replace />;
   }
   
@@ -48,29 +41,18 @@ const RoleBasedRedirect = () => {
   if (loading) return <div className="container">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
   
-  // Check if student has no assigned courses - show message
-  if (user.role === 'student' && !hasAccess()) {
-    return (
-      <div className="container page">
-        <div className="card empty-state">
-          <h2>No Courses Assigned</h2>
-          <p className="muted">You don't have any courses assigned yet. Please contact an administrator.</p>
-        </div>
-      </div>
-    );
-  }
-  
   // Redirect based on role
   if (user.role === 'admin') return <Navigate to="/admin" replace />;
-  if (user.role === 'student') return <Navigate to="/dashboard" replace />;
+  if (user.role === 'instructor') return <Navigate to="/instructor" replace />;
+  if (user.role === 'user') return <Navigate to="/dashboard" replace />;
   return <Navigate to="/login" replace />;
 };
 
 function App() {
   const { user, hasAccess } = useAuth();
   
-  // Don't render navbar for students with no assigned courses
-  const shouldShowNavbar = !user || user.role === 'admin' || (user.role === 'student' && hasAccess());
+  // Show navbar for all authenticated users
+  const shouldShowNavbar = user && (user.role === 'admin' || user.role === 'instructor' || (user.role === 'user' && hasAccess()));
   
   return (
     <>
@@ -80,7 +62,7 @@ function App() {
         <Route
           path="/courses"
           element={
-            <ProtectedRoute roles={['student', 'admin']}>
+            <ProtectedRoute roles={['user', 'admin', 'instructor']}>
               <HomePage />
             </ProtectedRoute>
           }
@@ -91,7 +73,7 @@ function App() {
         <Route 
           path="/courses/:id" 
           element={
-            <ProtectedRoute roles={['student', 'admin']}>
+            <ProtectedRoute roles={['user', 'admin', 'instructor']}>
               <CoursePage />
             </ProtectedRoute>
           } 
@@ -99,7 +81,7 @@ function App() {
         <Route 
           path="/courses/:id/assessment" 
           element={
-            <ProtectedRoute roles={['student', 'admin']}>
+            <ProtectedRoute roles={['user', 'admin', 'instructor']}>
               <AssessmentPage />
             </ProtectedRoute>
           } 
@@ -107,7 +89,7 @@ function App() {
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute roles={['student']}>
+            <ProtectedRoute roles={['user']}>
               <DashboardPage />
             </ProtectedRoute>
           }
@@ -115,7 +97,15 @@ function App() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute roles={['admin']}>
+            <ProtectedRoute roles={['admin', 'instructor']}>
+              <AdminPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor"
+          element={
+            <ProtectedRoute roles={['admin', 'instructor']}>
               <AdminPage />
             </ProtectedRoute>
           }

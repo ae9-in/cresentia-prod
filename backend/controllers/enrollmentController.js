@@ -29,8 +29,13 @@ const enrollCourse = asyncHandler(async (req, res) => {
     throw new Error('Course not found');
   }
 
-  // Check if user has access to this course (students only)
-  if (req.user.role === 'student') {
+  // Check access based on role
+  if (req.user.role === 'instructor') {
+    if (course.createdBy.toString() !== req.user._id.toString()) {
+      res.status(403);
+      throw new Error('You can only access courses you created.');
+    }
+  } else if (req.user.role === 'user') {
     const hasAccess = req.user.assignedCourses.some(
       id => id.toString() === course._id.toString()
     );

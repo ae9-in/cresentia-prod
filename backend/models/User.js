@@ -8,16 +8,28 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     role: {
       type: String,
-      enum: ['student', 'admin'],
-      default: 'student'
+      enum: ['admin', 'instructor', 'user'],
+      required: true
     },
     isVerified: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
     verificationToken: { type: String },
     verificationTokenExpires: { type: Date },
     
-    // Assigned courses (admin manually assigns)
+    // For instructors: who created them
+    createdBy: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'User'
+    },
+    
+    // Assigned courses (admin manually assigns to users)
     assignedCourses: [{ 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'Course' 
+    }],
+    
+    // Completed courses
+    completedCourses: [{ 
       type: mongoose.Schema.Types.ObjectId, 
       ref: 'Course' 
     }],

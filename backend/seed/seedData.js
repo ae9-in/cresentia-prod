@@ -367,6 +367,7 @@ const seed = async () => {
     Enrollment.deleteMany({})
   ]);
 
+  // Create users with different roles
   const users = await User.create([
     {
       name: 'Admin User',
@@ -377,38 +378,90 @@ const seed = async () => {
       isActive: true
     },
     {
+      name: 'John Instructor',
+      email: 'instructor@gmail.com',
+      password: 'instructor',
+      role: 'instructor',
+      isVerified: true,
+      isActive: true
+    },
+    {
+      name: 'Sarah Instructor',
+      email: 'instructor2@gmail.com',
+      password: 'instructor2',
+      role: 'instructor',
+      isVerified: true,
+      isActive: true
+    },
+    {
       name: 'Student User',
-      email: 'student@gmail.com',
-      password: 'student',
-      role: 'student',
+      email: 'user@gmail.com',
+      password: 'user',
+      role: 'user',
       isVerified: true,
       isActive: true,
-      assignedCourses: [] // Will be populated after courses are created
+      assignedCourses: []
     }
   ]);
 
   const admin = users.find((u) => u.role === 'admin');
-  const student = users.find((u) => u.role === 'student');
+  const instructor = users.find((u) => u.email === 'instructor@gmail.com');
+  const instructor2 = users.find((u) => u.email === 'instructor2@gmail.com');
+  const user = users.find((u) => u.role === 'user');
   
-  const courses = await Course.insertMany(courseSeed(admin._id));
+  // Set instructors' createdBy to admin
+  instructor.createdBy = admin._id;
+  instructor2.createdBy = admin._id;
+  await instructor.save();
+  await instructor2.save();
+  
+  // Create courses - some by admin, some by instructor
+  const courseSeedData = courseSeed(admin._id);
+  
+  // First 12 courses created by admin
+  const adminCourses = courseSeedData.slice(0, 12).map(course => ({
+    ...course,
+    createdBy: admin._id
+  }));
+  
+  // Next 6 courses created by instructor 1
+  const instructor1Courses = courseSeedData.slice(12, 18).map(course => ({
+    ...course,
+    createdBy: instructor._id
+  }));
+  
+  // Last 6 courses created by instructor 2
+  const instructor2Courses = courseSeedData.slice(18).map(course => ({
+    ...course,
+    createdBy: instructor2._id
+  }));
+  
+  const courses = await Course.insertMany([...adminCourses, ...instructor1Courses, ...instructor2Courses]);
 
-  // Assign first 3 courses to student as example
+  // Assign first 3 courses to user
   if (courses.length >= 3) {
-    student.assignedCourses = [courses[0]._id, courses[1]._id, courses[2]._id];
-    await student.save();
+    user.assignedCourses = [courses[0]._id, courses[1]._id, courses[2]._id];
+    await user.save();
     
-    // Auto-enroll student in assigned courses
+    // Auto-enroll user in assigned courses
     await Enrollment.create([
-      { student: student._id, course: courses[0]._id },
-      { student: student._id, course: courses[1]._id },
-      { student: student._id, course: courses[2]._id }
+      { student: user._id, course: courses[0]._id },
+      { student: user._id, course: courses[1]._id },
+      { student: user._id, course: courses[2]._id }
     ]);
   }
 
   console.log('Seed complete');
+  console.log('='.repeat(50));
   console.log('Admin: admin@gmail.com / admin');
-  console.log('Student: student@gmail.com / student');
-  console.log(`Student has ${student.assignedCourses.length} courses assigned and enrolled`);
+  console.log('Instructor 1: instructor@gmail.com / instructor');
+  console.log('Instructor 2: instructor2@gmail.com / instructor2');
+  console.log('User: user@gmail.com / user');
+  console.log('='.repeat(50));
+  console.log(`Admin created ${adminCourses.length} courses`);
+  console.log(`Instructor 1 created ${instructor1Courses.length} courses`);
+  console.log(`Instructor 2 created ${instructor2Courses.length} courses`);
+  console.log(`User has ${user.assignedCourses.length} courses assigned`);
 
   await mongoose.connection.close();
 };
