@@ -612,17 +612,17 @@ const AdminPage = () => {
                 </div>
                 <p>{course.category}</p>
                 <div className="meta-row">
-                  <button className="ghost-btn" type="button" onClick={() => editCourse(course)}>
+                  <button className="bg-[#FF5F1F] hover:bg-[#e0561b] text-white px-4 py-2 rounded-lg font-semibold transition-all" type="button" onClick={() => editCourse(course)}>
                     Edit
                   </button>
                   <button
-                    className="ghost-btn"
+                    className="border border-gray-600 hover:border-[#FF5F1F] hover:bg-[#FF5F1F]/10 text-gray-300 hover:text-white px-4 py-2 rounded-lg font-semibold transition-all"
                     type="button"
                     onClick={() => togglePublish(course._id)}
                   >
                     {course.isPublished ? 'Unpublish' : 'Publish'}
                   </button>
-                  <button className="ghost-btn delete-btn" type="button" onClick={() => deleteCourse(course._id)}>
+                  <button className="border border-red-600 hover:bg-red-600 text-red-500 hover:text-white px-4 py-2 rounded-lg font-semibold transition-all" type="button" onClick={() => deleteCourse(course._id)}>
                     Delete
                   </button>
                 </div>
@@ -697,31 +697,31 @@ const AdminPage = () => {
                   </div>
                 </div>
                 <div className="user-actions">
-                  <button className="ghost-btn" type="button" onClick={() => editUser(user)}>
+                  <button className="bg-[#FF5F1F] hover:bg-[#e0561b] text-white px-4 py-2 rounded-lg font-semibold transition-all" type="button" onClick={() => editUser(user)}>
                     Edit
                   </button>
                   <button
-                    className="ghost-btn"
+                    className="border border-gray-600 hover:border-[#FF5F1F] hover:bg-[#FF5F1F]/10 text-gray-300 hover:text-white px-4 py-2 rounded-lg font-semibold transition-all"
                     type="button"
                     onClick={() => toggleUserStatus(user._id)}
                   >
                     {user.isActive ? 'Deactivate' : 'Activate'}
                   </button>
                   <button
-                    className="ghost-btn"
+                    className="border border-gray-600 hover:border-[#FF5F1F] hover:bg-[#FF5F1F]/10 text-gray-300 hover:text-white px-4 py-2 rounded-lg font-semibold transition-all"
                     type="button"
                     onClick={() => openCourseAssignment(user)}
                   >
                     Manage Courses
                   </button>
                   <button
-                    className="ghost-btn"
+                    className="border border-gray-600 hover:border-[#FF5F1F] hover:bg-[#FF5F1F]/10 text-gray-300 hover:text-white px-4 py-2 rounded-lg font-semibold transition-all"
                     type="button"
                     onClick={() => resetProgress(user._id)}
                   >
                     Reset Progress
                   </button>
-                  <button className="ghost-btn delete-btn" type="button" onClick={() => deleteUser(user._id)}>
+                  <button className="border border-red-600 hover:bg-red-600 text-red-500 hover:text-white px-4 py-2 rounded-lg font-semibold transition-all" type="button" onClick={() => deleteUser(user._id)}>
                     Delete
                   </button>
                 </div>

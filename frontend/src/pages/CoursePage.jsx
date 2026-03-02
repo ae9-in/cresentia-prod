@@ -192,7 +192,11 @@ const CoursePage = () => {
     return (
       <main className="container page">
         <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
-          <h2 style={{ marginBottom: '1rem' }}>📚 Course Not Found</h2>
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{margin: '0 auto 1rem', opacity: 0.6}}>
+            <path d="M4 19.5C4 18.837 4.26339 18.2011 4.73223 17.7322C5.20107 17.2634 5.83696 17 6.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M6.5 2H20V22H6.5C5.83696 22 5.20107 21.7366 4.73223 21.2678C4.26339 20.7989 4 20.163 4 19.5V4.5C4 3.83696 4.26339 3.20107 4.73223 2.73223C5.20107 2.26339 5.83696 2 6.5 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <h2 style={{ marginBottom: '1rem' }}>Course Not Found</h2>
           <p className="muted" style={{ marginBottom: '2rem' }}>
             The course you're looking for doesn't exist or has been removed.
           </p>
@@ -476,7 +480,12 @@ const CoursePage = () => {
                     className="ghost-btn"
                     style={{ width: '100%', textAlign: 'center' }}
                   >
-                    📊 View Results
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{marginRight: '0.5rem', display: 'inline-block', verticalAlign: 'middle'}}>
+                      <path d="M3 3V8H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M21 21V16H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M20.49 9C20.0295 7.52746 19.1956 6.20521 18.0667 5.16185C16.9378 4.11848 15.5544 3.39005 14.0541 3.05132C12.5538 2.71259 10.9921 2.77572 9.52539 3.23424C8.05867 3.69276 6.73731 4.53119 5.69 5.66L3 8M21 16L18.31 18.34C17.2627 19.4688 15.9413 20.3072 14.4746 20.7658C13.0079 21.2243 11.4462 21.2874 9.94589 20.9487C8.44558 20.61 7.06222 19.8815 5.93333 18.8382C4.80444 17.7948 3.97053 16.4725 3.51 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    View Results
                   </Link>
                 </div>
               ) : (
@@ -511,7 +520,14 @@ const CoursePage = () => {
 
           {/* Course Stats */}
           <div className="card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ marginBottom: '1rem' }}>📊 Your Progress</h3>
+            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 3V8H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M21 21V16H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M20.49 9C20.0295 7.52746 19.1956 6.20521 18.0667 5.16185C16.9378 4.11848 15.5544 3.39005 14.0541 3.05132C12.5538 2.71259 10.9921 2.77572 9.52539 3.23424C8.05867 3.69276 6.73731 4.53119 5.69 5.66L3 8M21 16L18.31 18.34C17.2627 19.4688 15.9413 20.3072 14.4746 20.7658C13.0079 21.2243 11.4462 21.2874 9.94589 20.9487C8.44558 20.61 7.06222 19.8815 5.93333 18.8382C4.80444 17.7948 3.97053 16.4725 3.51 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Your Progress
+            </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <div className="muted" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>

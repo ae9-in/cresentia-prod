@@ -232,7 +232,17 @@ const AssessmentPage = () => {
             marginBottom: '2rem'
           }}>
             <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>
-              {isPassed ? '🎉' : '📚'}
+              {isPassed ? (
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{margin: '0 auto', display: 'block'}}>
+                  <path d="M22 11.08V12C21.9988 14.1564 21.3005 16.2547 20.0093 17.9818C18.7182 19.7088 16.9033 20.9725 14.8354 21.5839C12.7674 22.1953 10.5573 22.1219 8.53447 21.3746C6.51168 20.6273 4.78465 19.2461 3.61096 17.4371C2.43727 15.628 1.87979 13.4881 2.02168 11.3363C2.16356 9.18455 2.99721 7.13631 4.39828 5.49706C5.79935 3.85781 7.69279 2.71537 9.79619 2.24013C11.8996 1.76489 14.1003 1.98232 16.07 2.86" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M22 4L12 14.01L9 11.01" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              ) : (
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{margin: '0 auto', display: 'block'}}>
+                  <path d="M4 19.5C4 18.837 4.26339 18.2011 4.73223 17.7322C5.20107 17.2634 5.83696 17 6.5 17H20" stroke="#FF5F1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6.5 2H20V22H6.5C5.83696 22 5.20107 21.7366 4.73223 21.2678C4.26339 20.7989 4 20.163 4 19.5V4.5C4 3.83696 4.26339 3.20107 4.73223 2.73223C5.20107 2.26339 5.83696 2 6.5 2Z" stroke="#FF5F1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
             </div>
             <h1 style={{ marginBottom: '0.5rem' }}>
               {isPassed ? 'Congratulations!' : 'Keep Learning!'}
@@ -311,7 +321,13 @@ const AssessmentPage = () => {
               ← Back to Course
             </button>
             <button onClick={() => navigate('/dashboard')} className="ghost-btn">
-              📊 Go to Dashboard
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{marginRight: '0.5rem', display: 'inline-block', verticalAlign: 'middle'}}>
+                <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Go to Dashboard
             </button>
           </div>
         </div>
@@ -329,35 +345,74 @@ const AssessmentPage = () => {
           
           <div style={{ 
             padding: '1.5rem', 
-            background: '#f0f9ff', 
+            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(6, 182, 212, 0.05))', 
             borderRadius: '12px',
-            marginBottom: '2rem'
+            marginBottom: '2rem',
+            border: '1px solid rgba(6, 182, 212, 0.3)',
+            boxShadow: '0 4px 16px rgba(6, 182, 212, 0.2)'
           }}>
-            <h3 style={{ marginBottom: '1rem' }}>📋 Assessment Details</h3>
+            <h3 style={{ 
+              marginBottom: '1rem',
+              color: '#06b6d4',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              📋 Assessment Details
+            </h3>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ padding: '0.5rem 0', borderBottom: '1px solid #e5e7eb' }}>
-                <strong>Questions:</strong> {course.quizQuestions.length}
+              <li style={{ 
+                padding: '0.75rem 0', 
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                color: '#e5e7eb'
+              }}>
+                <strong style={{ color: '#06b6d4' }}>Questions:</strong> {course.quizQuestions.length}
               </li>
-              <li style={{ padding: '0.5rem 0', borderBottom: '1px solid #e5e7eb' }}>
-                <strong>Time Limit:</strong> 15 minutes
+              <li style={{ 
+                padding: '0.75rem 0', 
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                color: '#e5e7eb'
+              }}>
+                <strong style={{ color: '#06b6d4' }}>Time Limit:</strong> 15 minutes
               </li>
-              <li style={{ padding: '0.5rem 0', borderBottom: '1px solid #e5e7eb' }}>
-                <strong>Passing Score:</strong> 70%
+              <li style={{ 
+                padding: '0.75rem 0', 
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                color: '#e5e7eb'
+              }}>
+                <strong style={{ color: '#06b6d4' }}>Passing Score:</strong> 70%
               </li>
-              <li style={{ padding: '0.5rem 0' }}>
-                <strong>Attempts:</strong> Unlimited
+              <li style={{ 
+                padding: '0.75rem 0',
+                color: '#e5e7eb'
+              }}>
+                <strong style={{ color: '#06b6d4' }}>Attempts:</strong> Unlimited
               </li>
             </ul>
           </div>
 
           <div style={{ 
             padding: '1.5rem', 
-            background: '#fef3c7', 
+            background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.05))', 
             borderRadius: '12px',
-            marginBottom: '2rem'
+            marginBottom: '2rem',
+            border: '1px solid rgba(251, 191, 36, 0.3)',
+            boxShadow: '0 4px 16px rgba(251, 191, 36, 0.2)'
           }}>
-            <h3 style={{ marginBottom: '0.5rem' }}>⚠️ Important</h3>
-            <ul style={{ margin: '0.5rem 0 0 1.5rem', lineHeight: '1.8' }}>
+            <h3 style={{ 
+              marginBottom: '0.75rem',
+              color: '#fbbf24',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              ⚠️ Important
+            </h3>
+            <ul style={{ 
+              margin: '0.5rem 0 0 1.5rem', 
+              lineHeight: '1.8',
+              color: '#e5e7eb'
+            }}>
               <li>You cannot pause once started</li>
               <li>Quiz will auto-submit when time runs out</li>
               <li>Make sure you have a stable internet connection</li>

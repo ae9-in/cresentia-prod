@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import LandingPage from './pages/LandingPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -36,16 +37,16 @@ const ProtectedRoute = ({ children, roles }) => {
 };
 
 const RoleBasedRedirect = () => {
-  const { user, loading, hasAccess } = useAuth();
+  const { user, loading } = useAuth();
   
   if (loading) return <div className="container">Loading...</div>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <LandingPage />;
   
   // Redirect based on role
   if (user.role === 'admin') return <Navigate to="/admin" replace />;
   if (user.role === 'instructor') return <Navigate to="/instructor" replace />;
   if (user.role === 'user') return <Navigate to="/dashboard" replace />;
-  return <Navigate to="/login" replace />;
+  return <Navigate to="/dashboard" replace />;
 };
 
 function App() {
