@@ -121,6 +121,15 @@ const CourseDetailPage = () => {
   const markModuleCompleted = async () => {
     try {
       const module = getModules()[currentStep];
+      let currentEnrollment = enrollment;
+
+      // Auto-enroll if not enrolled (common for admins/instructors)
+      if (!currentEnrollment) {
+        console.log('📝 Auto-enrolling user to track progress...');
+        const enrollRes = await api.post(`/enrollments/${id}`);
+        currentEnrollment = enrollRes.data;
+        setEnrollment(currentEnrollment);
+      }
       
       // For backward compatibility with old video-based system
       if (!course.modules || course.modules.length === 0) {

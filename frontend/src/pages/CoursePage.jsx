@@ -117,9 +117,17 @@ const CoursePage = () => {
 
   // Mark video as completed
   const markVideoCompleted = async (videoIndex) => {
-    if (!enrollment) return;
-    
     try {
+      let currentEnrollment = enrollment;
+      
+      // Auto-enroll if not enrolled (common for admins/instructors)
+      if (!currentEnrollment) {
+        console.log('📝 Auto-enrolling user to track progress...');
+        const enrollRes = await api.post(`/enrollments/${id}`);
+        currentEnrollment = enrollRes.data;
+        setEnrollment(currentEnrollment);
+      }
+      
       const { data } = await api.patch(`/enrollments/${id}/video-progress`, {
         videoIndex
       });
@@ -128,6 +136,8 @@ const CoursePage = () => {
       setTimeout(() => setMessage(''), 2000);
     } catch (err) {
       console.error('Error saving progress:', err);
+      setMessage('❌ Failed to save progress');
+      setTimeout(() => setMessage(''), 3000);
     }
   };
 
@@ -239,8 +249,9 @@ const CoursePage = () => {
     );
   }
 
-  // ACCESS DENIED (for students without enrollment)
-  if (user?.role === 'student' && !enrollment) {
+  // ACCESS DENIED (for regular users without enrollment)
+  // Admins and instructors can bypass this to view content immediately
+  if (!enrollment && user?.role !== 'admin' && user?.role !== 'instructor') {
     return (
       <main className="container page">
         <div className="card" style={{ padding: '3rem' }}>
@@ -392,7 +403,7 @@ const CoursePage = () => {
               </div>
               
               {/* Mark as Complete Button */}
-              {enrollment && !enrollment.completedVideos?.includes(currentVideoIndex) && (
+              {(!enrollment || !enrollment.completedVideos?.includes(currentVideoIndex)) && (
                 <button 
                   onClick={() => markVideoCompleted(currentVideoIndex)}
                   className="primary-btn"

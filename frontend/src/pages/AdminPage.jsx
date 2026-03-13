@@ -7,6 +7,7 @@ const emptyCourse = {
   description: '',
   category: 'IT',
   level: 'Beginner',
+  thumbnail: '',
   videosText: '',
   quizText: ''
 };
@@ -107,6 +108,7 @@ const AdminPage = () => {
       description: form.description,
       category: form.category,
       level: form.level,
+      thumbnail: form.thumbnail || undefined,
       videos: parseVideos(form.videosText),
       quizQuestions: parseQuiz(form.quizText)
     };
@@ -178,6 +180,7 @@ const AdminPage = () => {
       description: course.description,
       category: course.category,
       level: course.level,
+      thumbnail: course.thumbnail || '',
       videosText: (course.videos || [])
         .map((v) => `${v.title} | ${v.url} | ${v.durationMinutes}`)
         .join('\n'),
@@ -530,6 +533,35 @@ const AdminPage = () => {
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               required
             />
+            <input
+              type="url"
+              placeholder="Thumbnail URL (Cloudinary image URL - optional)"
+              value={form.thumbnail}
+              onChange={(e) => setForm({ ...form, thumbnail: e.target.value })}
+            />
+            {form.thumbnail && (
+              <div style={{ marginTop: '0.5rem', marginBottom: '1rem' }}>
+                <p className="muted" style={{ marginBottom: '0.5rem', fontSize: '0.85rem' }}>Thumbnail Preview:</p>
+                <img 
+                  src={form.thumbnail} 
+                  alt="Thumbnail preview" 
+                  style={{ 
+                    maxWidth: '300px', 
+                    maxHeight: '200px', 
+                    borderRadius: '8px',
+                    border: '1px solid var(--line)',
+                    objectFit: 'cover'
+                  }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextElementSibling.style.display = 'block';
+                  }}
+                />
+                <p className="error" style={{ display: 'none', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                  ⚠️ Invalid image URL
+                </p>
+              </div>
+            )}
             <div className="meta-row">
               <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
                 <option>IT</option>

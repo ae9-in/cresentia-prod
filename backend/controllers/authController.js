@@ -69,6 +69,9 @@ const login = asyncHandler(async (req, res) => {
     });
     
   if (!user || !(await user.matchPassword(password))) {
+    console.log('❌ Login failed for:', email.toLowerCase());
+    if (!user) console.log('   Reason: User not found');
+    else console.log('   Reason: Password mismatch');
     return res.status(401).json({ message: 'Invalid email or password' });
   }
 
