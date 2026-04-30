@@ -1,74 +1,166 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../services/api';
 import CourseCard from '../components/CourseCard';
-import { useAuth } from '../context/AuthContext';
 
-const categories = ['All', 'IT', 'Business & Analytics', 'Sales & Soft Skills', 'AI & ML'];
 const levels = ['All', 'Beginner', 'Intermediate', 'Advanced'];
+const getVideoType = (url = '') => (url.includes('drive.google.com') ? 'drive' : url ? 'video' : '');
 
 const HomePage = () => {
   const [courses, setCourses] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [enrollments, setEnrollments] = useState([]);
+  const [resolvedDurations, setResolvedDurations] = useState({});
   const [selectedLevel, setSelectedLevel] = useState('All');
   const [query, setQuery] = useState('');
-  const [autocomplete, setAutocomplete] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user, refreshUser, hasAccess } = useAuth();
-
-  // Create a stable key from the course IDs
-  const coursesKey = user?.assignedCourses?.map(c => 
-    typeof c === 'object' ? c._id : c
-  ).join(',') || '';
 
   useEffect(() => {
-    const params = {};
-    if (selectedCategory !== 'All') params.category = selectedCategory;
-    if (selectedLevel !== 'All') params.level = selectedLevel;
-    if (query) params.q = query;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const params = {};
+        if (selectedLevel !== 'All') params.level = selectedLevel;
+        if (query) params.q = query;
 
-    console.log('🔄 HomePage: Fetching courses');
-    console.log('User role:', user?.role);
-    console.log('Assigned courses:', user?.assignedCourses?.length);
-    
-    setLoading(true);
-    api
-      .get('/courses', { params })
-      .then((res) => {
-        console.log('✅ HomePage: Courses loaded:', res.data.length);
-        setCourses(res.data);
-      })
-      .catch((err) => {
-        console.error('❌ HomePage: Failed to load courses:', err);
+        const [courseRes, enrollmentRes] = await Promise.allSettled([
+          api.get('/courses', { params }),
+          api.get('/enrollments')
+        ]);
+
+        setCourses(courseRes.status === 'fulfilled' ? courseRes.value.data : []);
+        setEnrollments(enrollmentRes.status === 'fulfilled' ? enrollmentRes.value.data : []);
+      } catch (error) {
+        console.error('Failed to load courses:', error);
         setCourses([]);
-      })
-      .finally(() => setLoading(false));
-  }, [selectedCategory, selectedLevel, query, coursesKey]); // Re-fetch when coursesKey changes
+        setEnrollments([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, [selectedLevel, query]);
 
   useEffect(() => {
-    if (!query) {
-      setAutocomplete([]);
+    if (!courses.length) {
+      setResolvedDurations({});
       return;
     }
-    const id = setTimeout(() => {
-      api
-        .get('/courses/search', { params: { q: query } })
-        .then((res) => setAutocomplete(res.data.autocomplete || []))
-        .catch(() => setAutocomplete([]));
-    }, 250);
 
-    return () => clearTimeout(id);
-  }, [query]);
+    let isCancelled = false;
 
-  const heading = useMemo(() => {
-    if (selectedCategory !== 'All') return `${selectedCategory} Courses`;
-    return 'Explore Courses';
-  }, [selectedCategory]);
+    const loadCourseDurations = async () => {
+      const entries = await Promise.all(
+        courses.map(async (course) => {
+          const videos = course.videos || [];
+
+          const videoDurations = await Promise.all(
+            videos.map(
+              (video) =>
+                new Promise((resolve) => {
+                  if (getVideoType(video.url) !== 'video') {
+                    resolve(null);
+                    return;
+                  }
+
+                  const media = document.createElement('video');
+                  media.preload = 'metadata';
+                  media.src = video.url.trim();
+
+                  const cleanup = () => {
+                    media.removeAttribute('src');
+                    media.load();
+                  };
+
+                  media.onloadedmetadata = () => {
+                    const minutes = Number.isFinite(media.duration) ? Math.max(1, Math.ceil(media.duration / 60)) : null;
+                    cleanup();
+                    resolve(minutes);
+                  };
+
+                  media.onerror = () => {
+                    cleanup();
+                    resolve(null);
+                  };
+                })
+            )
+          );
+
+          const resolvedValues = videoDurations.filter((value) => typeof value === 'number');
+          const unresolvedCount = videos.length - resolvedValues.length;
+
+          return [
+            course._id,
+            {
+              minutes: resolvedValues.reduce((sum, value) => sum + value, 0),
+              unresolvedCount
+            }
+          ];
+        })
+      );
+
+      if (!isCancelled) {
+        setResolvedDurations(Object.fromEntries(entries));
+      }
+    };
+
+    loadCourseDurations();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [courses]);
+
+  const courseCards = useMemo(() => {
+    return courses.map((course) => {
+      const enrollment = enrollments.find((item) => item.course?._id === course._id);
+      const durationInfo = resolvedDurations[course._id];
+      let durationLabel = 'Loading duration...';
+
+      if (durationInfo) {
+        durationLabel =
+          durationInfo.unresolvedCount > 0
+            ? `${durationInfo.minutes} mins+`
+            : `${durationInfo.minutes} mins`;
+      }
+
+      return {
+        ...course,
+        lessonCount: course.videos?.length || 0,
+        durationLabel,
+        progressPercent: enrollment?.progressPercent || 0,
+        status:
+          enrollment?.progressPercent === 100
+            ? 'Completed'
+            : enrollment?.progressPercent > 0
+            ? 'In Progress'
+            : 'Not Started'
+      };
+    });
+  }, [courses, enrollments, resolvedDurations]);
 
   return (
     <main className="container page">
-      <section className="hero">
-        <h1>Build your future with Crescentia</h1>
-        <p>Browse curated courses, watch lessons, take assessments, and earn your completion certificate.</p>
+      <section className="hero courses-hero">
+        <div>
+          <h1>Courses</h1>
+          <p>
+            Browse every Cresantia learning track, resume where you left off, and unlock the assessment and certificate flow after completion.
+          </p>
+        </div>
+        <div className="courses-hero-stats">
+          <div className="card">
+            <strong>{courseCards.length}</strong>
+            <span>Categories</span>
+          </div>
+          <div className="card">
+            <strong>{enrollments.filter((item) => item.progressPercent > 0 && item.progressPercent < 100).length}</strong>
+            <span>In Progress</span>
+          </div>
+          <div className="card">
+            <strong>{enrollments.filter((item) => item.progressPercent === 100).length}</strong>
+            <span>Completed</span>
+          </div>
+        </div>
       </section>
 
       <section className="filters">
@@ -77,95 +169,37 @@ const HomePage = () => {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by title or category"
+            placeholder="Search course categories or lesson titles"
           />
-          {autocomplete.length > 0 && (
-            <ul className="autocomplete">
-              {autocomplete.map((item) => (
-                <li key={item}>
-                  <button type="button" onClick={() => setQuery(item)}>
-                    {item}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
-
-        <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
-          {categories.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
 
         <select value={selectedLevel} onChange={(e) => setSelectedLevel(e.target.value)}>
-          {levels.map((l) => (
-            <option key={l}>{l}</option>
+          {levels.map((level) => (
+            <option key={level}>{level}</option>
           ))}
         </select>
+
+        <div className="card courses-filter-card">
+          <strong>{courseCards.reduce((sum, course) => sum + (course.lessonCount || 0), 0)}</strong>
+          <span>Total Lessons</span>
+        </div>
       </section>
 
-      <h2>{heading}</h2>
-      
-      {/* Loading State */}
-      {loading && (
-        <div className="loading-spinner">Loading courses...</div>
-      )}
+      {loading && <div className="loading-spinner">Loading courses...</div>}
 
-      {/* Empty State - No Courses */}
-      {!loading && (!courses || courses.length === 0) && (
+      {!loading && courseCards.length === 0 && (
         <div className="beautiful-empty-state">
-          <div className="empty-state-icon">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 19.5C4 18.837 4.26339 18.2011 4.73223 17.7322C5.20107 17.2634 5.83696 17 6.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M6.5 2H20V22H6.5C5.83696 22 5.20107 21.7366 4.73223 21.2678C4.26339 20.7989 4 20.163 4 19.5V4.5C4 3.83696 4.26339 3.20107 4.73223 2.73223C5.20107 2.26339 5.83696 2 6.5 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <h3 className="empty-state-title">
-            {query || selectedCategory !== 'All' || selectedLevel !== 'All'
-              ? 'No Courses Found'
-              : user?.role === 'admin'
-              ? 'No Courses Created Yet'
-              : 'No Courses Assigned'}
-          </h3>
+          <div className="empty-state-icon">📚</div>
+          <h3 className="empty-state-title">No courses found</h3>
           <p className="empty-state-description">
-            {query || selectedCategory !== 'All' || selectedLevel !== 'All'
-              ? 'Try adjusting your filters or search terms to find courses.'
-              : user?.role === 'admin'
-              ? 'Get started by creating your first course in the Admin Panel.'
-              : 'No courses have been assigned to you yet. Please contact an administrator to get course access.'}
+            Try another search or level filter. The course landing page reads directly from the backend catalog.
           </p>
-          <div className="empty-state-actions">
-            {(query || selectedCategory !== 'All' || selectedLevel !== 'All') && (
-              <button
-                className="primary-btn"
-                onClick={() => {
-                  setQuery('');
-                  setSelectedCategory('All');
-                  setSelectedLevel('All');
-                }}
-                type="button"
-              >
-                Clear Filters
-              </button>
-            )}
-            {user?.role === 'admin' && !query && selectedCategory === 'All' && selectedLevel === 'All' && (
-              <button
-                className="primary-btn"
-                onClick={() => window.location.href = '/admin'}
-                type="button"
-              >
-                Go to Admin Panel
-              </button>
-            )}
-          </div>
         </div>
       )}
 
-      {/* Courses Grid */}
-      {!loading && courses && courses.length > 0 && (
-        <section className="grid">
-          {courses.map((course) => (
+      {!loading && courseCards.length > 0 && (
+        <section className="grid courses-grid">
+          {courseCards.map((course) => (
             <CourseCard key={course._id} course={course} />
           ))}
         </section>

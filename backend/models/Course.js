@@ -67,7 +67,16 @@ const courseSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: ['IT', 'Business & Analytics', 'Sales & Soft Skills', 'AI & ML']
+      enum: [
+        'Auth Concepts',
+        'Website Content',
+        'Business Analysis',
+        'API Development',
+        'Backend Basics',
+        'Machine Learning',
+        'Conversion Optimization',
+        'Web Development'
+      ]
     },
     level: { 
       type: String, 
@@ -76,6 +85,8 @@ const courseSchema = new mongoose.Schema(
     },
     title: { type: String, required: true },
     description: { type: String, required: true },
+    thumbnail: { type: String },
+    instructorName: { type: String, default: 'Cresantia' },
     
     // Publishing control
     isPublished: { type: Boolean, default: true },

@@ -17,7 +17,8 @@ const listCourses = asyncHandler(async (req, res) => {
   if (q) {
     query.$or = [
       { title: { $regex: q, $options: 'i' } },
-      { description: { $regex: q, $options: 'i' } }
+      { description: { $regex: q, $options: 'i' } },
+      { 'videos.title': { $regex: q, $options: 'i' } }
     ];
   }
 
@@ -34,7 +35,7 @@ const listCourses = asyncHandler(async (req, res) => {
 
   // Optimized: Select only necessary fields, limit results
   const courses = await Course.find(query)
-    .select('title description category level ratingAverage estimatedDuration durationMinutes createdBy isPublished')
+    .select('title description category level ratingAverage estimatedDuration durationMinutes createdBy isPublished thumbnail instructorName videos')
     .populate('createdBy', 'name')
     .limit(50)
     .lean(); // Use lean() for better performance
@@ -152,7 +153,8 @@ const searchCourses = asyncHandler(async (req, res) => {
   if (safeQ) {
     query.$or = [
       { title: { $regex: safeQ, $options: 'i' } },
-      { description: { $regex: safeQ, $options: 'i' } }
+      { description: { $regex: safeQ, $options: 'i' } },
+      { 'videos.title': { $regex: safeQ, $options: 'i' } }
     ];
   }
   if (category) query.category = category;

@@ -96,6 +96,8 @@ const updateVideoProgress = asyncHandler(async (req, res) => {
     enrollment.completedVideos.push(videoIndex);
   }
 
+  enrollment.currentModuleIndex = Math.max(enrollment.currentModuleIndex || 0, videoIndex + 1);
+
   enrollment.progressPercent = calculateProgress(course, enrollment);
   if (enrollment.progressPercent === 100 && !enrollment.completedAt) {
     enrollment.completedAt = new Date();
@@ -247,6 +249,7 @@ const submitQuiz = asyncHandler(async (req, res) => {
     ? Math.round((score / course.quizQuestions.length) * 100)
     : 100;
 
+  enrollment.quizAttempts = (enrollment.quizAttempts || 0) + 1;
   enrollment.quizScore = percentage;
   enrollment.quizSubmittedAt = new Date();
   enrollment.progressPercent = calculateProgress(course, enrollment);
@@ -321,6 +324,12 @@ const downloadCertificate = asyncHandler(async (req, res) => {
   doc.fontSize(12).font('Helvetica').text(`Completion Date: ${completionDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, { align: 'center' });
   doc.moveDown(0.3);
   doc.text(`Assessment Score: ${enrollment.quizScore}%`, { align: 'center' });
+  doc.moveDown(0.3);
+  doc.text(`Assessment Status: ${enrollment.quizScore >= 70 ? 'Cleared' : 'Not Cleared'}`, { align: 'center' });
+  doc.moveDown(0.3);
+  doc.text(`Completion Percentage: ${enrollment.progressPercent}%`, { align: 'center' });
+  doc.moveDown(0.3);
+  doc.text(`Completion Time: ${completionDate.toLocaleTimeString('en-US')}`, { align: 'center' });
   doc.moveDown(0.3);
   doc.fontSize(10).fillColor('#666').text(`Certificate ID: ${enrollment._id}`, { align: 'center' });
   

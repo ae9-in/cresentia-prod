@@ -32,11 +32,11 @@ const LoginPage = () => {
           Crescentia
         </Link>
         <div className="flex items-center gap-8">
-          <Link to="/#courses" className="text-gray-400 hover:text-white transition-colors font-medium text-sm">
-            Courses
+          <Link to="/" className="text-gray-400 hover:text-white transition-colors font-medium text-sm">
+            Home
           </Link>
-          <Link to="/#features" className="text-gray-400 hover:text-white transition-colors font-medium text-sm">
-            Dashboard
+          <Link to="/register" className="text-gray-400 hover:text-white transition-colors font-medium text-sm">
+            Register
           </Link>
         </div>
       </header>
@@ -69,11 +69,11 @@ const LoginPage = () => {
                 </div>
                 <div>
                   <h3 className="text-white font-bold text-base mb-1">Curated paths</h3>
-                  <p className="text-orange-100/70 text-sm">Browse focused course paths built for real-world roles.</p>
+                  <p className="text-orange-100/70 text-sm">Keep your account details and role-specific access in one place.</p>
                 </div>
                 <div>
                   <h3 className="text-white font-bold text-base mb-1">Verified certificates</h3>
-                  <p className="text-orange-100/70 text-sm">Download branded certificates after every completion.</p>
+                  <p className="text-orange-100/70 text-sm">Use a streamlined workspace focused on account access only.</p>
                 </div>
               </div>
             </div>

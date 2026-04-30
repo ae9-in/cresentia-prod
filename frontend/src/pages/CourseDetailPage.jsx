@@ -20,8 +20,8 @@ const CourseDetailPage = () => {
   const [showAssessment, setShowAssessment] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // TEST MODE - Set to true to bypass access checks temporarily
-  const TEST_MODE = true; // TEMPORARILY ENABLED FOR TESTING
+  // Keep frontend access checks aligned with backend roles.
+  const TEST_MODE = false;
 
   // Refresh user data on mount to ensure we have latest assigned courses
   useEffect(() => {
@@ -46,7 +46,7 @@ const CourseDetailPage = () => {
   console.log('🧪 TEST MODE:', TEST_MODE ? '⚠️ ENABLED (bypassing access checks)' : 'DISABLED');
 
   // Check access for students - but only after course is loaded
-  const accessCheck = TEST_MODE ? true : (user && user.role === 'student' ? hasCourseAccess(id) : true);
+  const accessCheck = TEST_MODE ? true : (user && user.role === 'user' ? hasCourseAccess(id) : true);
   console.log('🔐 Access Check Result:', accessCheck);
   console.log('========================================\n');
 
@@ -57,7 +57,7 @@ const CourseDetailPage = () => {
       console.log('========================================');
       console.log('📋 Course ID:', id);
       console.log('🌐 API URL:', `/courses/${id}`);
-      console.log('🔑 Token exists:', !!localStorage.getItem('token'));
+      console.log('🔑 Token exists:', !!sessionStorage.getItem('token'));
       
       setLoading(true);
       const { data } = await api.get(`/courses/${id}`);
@@ -243,7 +243,7 @@ const CourseDetailPage = () => {
   if (!course) return <main className="container page"><div className="error-message">Course not found</div></main>;
 
   // Check access AFTER course is loaded
-  if (user && user.role === 'student' && !accessCheck) {
+  if (user && user.role === 'user' && !accessCheck) {
     console.log('🚫 Access denied for course:', course.title);
     return (
       <main className="container page">

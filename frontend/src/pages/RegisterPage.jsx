@@ -38,27 +38,27 @@ const RegisterPage = () => {
           <div className="auth-brand">
             <span className="brand-pill">Crescentia</span>
             <h1>Create your account.</h1>
-            <p>Start learning with personalized paths, projects, and progress insights built for you.</p>
+            <p>Create an account to access your profile and workspace.</p>
           </div>
           <ul className="auth-features">
             <li>
-              <span>Personalized learning</span>
-              <small>Access curated courses tailored to your goals.</small>
+              <span>Personalized profile</span>
+              <small>Keep your account details organized in one place.</small>
             </li>
             <li>
-              <span>Smart course picks</span>
-              <small>Receive recommendations that evolve with your progress.</small>
+              <span>Role-based access</span>
+              <small>See the right dashboard for your account type.</small>
             </li>
             <li>
               <span>Anytime access</span>
-              <small>Learn from any device with seamless sync.</small>
+              <small>Sign in from any device with seamless sync.</small>
             </li>
           </ul>
         </div>
         <form className="auth-form card" onSubmit={submit}>
           <div>
             <h2>Create Account</h2>
-            <p className="muted">Join Crescentia to access courses and start learning.</p>
+            <p className="muted">Join Crescentia to access your account dashboard.</p>
           </div>
           {message && <p className="success">{message}</p>}
           {error && <p className="error">{error}</p>}

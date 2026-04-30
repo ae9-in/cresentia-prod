@@ -3,62 +3,41 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
-/**
- * COURSE PAGE - Video Learning Interface
- * 
- * Features:
- * - Left side: Video player with playlist
- * - Right side: Course info and assessment button
- * - Cloudinary video support
- * - Progress tracking
- * - No blank screens - always shows something
- */
-
 const CoursePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
-  // State management
   const [course, setCourse] = useState(null);
   const [enrollment, setEnrollment] = useState(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [resolvedDurations, setResolvedDurations] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
 
-  // Fetch course data
   const fetchCourse = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const { data } = await api.get(`/courses/${id}`);
       setCourse(data);
-      
-      console.log('✅ Course loaded:', data.title);
-      console.log('   Videos:', data.videos?.length || 0);
-      console.log('   Quiz Questions:', data.quizQuestions?.length || 0);
-      
     } catch (err) {
-      console.error('❌ Error loading course:', err);
       setError(err.response?.data?.message || 'Failed to load course');
     } finally {
       setLoading(false);
     }
   }, [id]);
 
-  // Fetch enrollment data
   const fetchEnrollment = useCallback(async () => {
     if (!user) return;
-    
+
     try {
       const { data } = await api.get('/enrollments');
-      const found = data.find(e => e.course?._id === id);
-      
+      const found = data.find((e) => e.course?._id === id);
+
       if (found) {
         setEnrollment(found);
-        // Resume from last watched video
         if (found.completedVideos?.length > 0) {
           const lastCompleted = Math.max(...found.completedVideos);
           setCurrentVideoIndex(Math.min(lastCompleted + 1, (course?.videos?.length || 1) - 1));
@@ -69,7 +48,6 @@ const CoursePage = () => {
     }
   }, [id, user, course]);
 
-  // Load data on mount
   useEffect(() => {
     fetchCourse();
   }, [fetchCourse]);
@@ -80,92 +58,157 @@ const CoursePage = () => {
     }
   }, [course, fetchEnrollment]);
 
-  // OPTIMIZATION: Preload next video for faster switching
   useEffect(() => {
     if (!course?.videos || currentVideoIndex >= course.videos.length - 1) return;
-    
+
     const nextVideo = course.videos[currentVideoIndex + 1];
-    if (nextVideo?.url) {
+    if (nextVideo?.url && !nextVideo.url.includes('drive.google.com')) {
       const link = document.createElement('link');
       link.rel = 'prefetch';
       link.as = 'video';
       link.href = nextVideo.url;
       link.type = 'video/mp4';
       document.head.appendChild(link);
-      
+
       return () => {
         try {
           document.head.removeChild(link);
         } catch (e) {
-          // Link already removed or doesn't exist
+          // no-op
         }
       };
     }
   }, [currentVideoIndex, course]);
 
-  // Enroll in course
   const handleEnroll = async () => {
     try {
       const { data } = await api.post(`/enrollments/${id}`);
       setEnrollment(data);
-      setMessage('✅ Enrolled successfully! Start learning now.');
+      setMessage('Enrolled successfully! Start learning now.');
       setTimeout(() => setMessage(''), 3000);
     } catch (err) {
-      setMessage('❌ ' + (err.response?.data?.message || 'Failed to enroll'));
+      setMessage(err.response?.data?.message || 'Failed to enroll');
     }
   };
 
-  // Mark video as completed
   const markVideoCompleted = async (videoIndex) => {
     try {
       let currentEnrollment = enrollment;
-      
-      // Auto-enroll if not enrolled (common for admins/instructors)
+
       if (!currentEnrollment) {
-        console.log('📝 Auto-enrolling user to track progress...');
         const enrollRes = await api.post(`/enrollments/${id}`);
         currentEnrollment = enrollRes.data;
         setEnrollment(currentEnrollment);
       }
-      
+
       const { data } = await api.patch(`/enrollments/${id}/video-progress`, {
         videoIndex
       });
       setEnrollment(data);
-      setMessage('✅ Progress saved!');
+      setMessage('Progress saved!');
       setTimeout(() => setMessage(''), 2000);
     } catch (err) {
-      console.error('Error saving progress:', err);
-      setMessage('❌ Failed to save progress');
+      setMessage('Failed to save progress');
       setTimeout(() => setMessage(''), 3000);
     }
   };
 
-  // Handle video end
   const handleVideoEnd = () => {
     if (!enrollment) return;
-    
-    // Mark current video as completed
+
     if (!enrollment.completedVideos?.includes(currentVideoIndex)) {
       markVideoCompleted(currentVideoIndex);
     }
-    
-    // Auto-advance to next video
+
     if (currentVideoIndex < (course?.videos?.length || 0) - 1) {
       setCurrentVideoIndex(currentVideoIndex + 1);
     }
   };
 
-  // Get video URL (Cloudinary only)
-  const getVideoUrl = (video) => {
-    if (!video?.url) return '';
-    return video.url.trim();
+  const getVideoSource = (video) => {
+    if (!video?.url) return { type: '', src: '' };
+    if (video.url.includes('drive.google.com')) {
+      const match = video.url.match(/\/d\/([^/]+)/);
+      return {
+        type: 'drive',
+        src: match ? `https://drive.google.com/file/d/${match[1]}/preview` : video.url
+      };
+    }
+    return { type: 'video', src: video.url.trim() };
   };
 
-  // Check if all videos are completed
+  useEffect(() => {
+    if (!course?.videos?.length) {
+      setResolvedDurations({});
+      return;
+    }
+
+    let isCancelled = false;
+
+    const loadDurations = async () => {
+      const durationEntries = await Promise.all(
+        course.videos.map(
+          (video, index) =>
+            new Promise((resolve) => {
+              const source = getVideoSource(video);
+
+              if (source.type !== 'video') {
+                resolve([index, null]);
+                return;
+              }
+
+              const media = document.createElement('video');
+              media.preload = 'metadata';
+              media.src = source.src;
+
+              const cleanup = () => {
+                media.removeAttribute('src');
+                media.load();
+              };
+
+              media.onloadedmetadata = () => {
+                const minutes = Number.isFinite(media.duration) ? Math.max(1, Math.ceil(media.duration / 60)) : null;
+                cleanup();
+                resolve([index, minutes]);
+              };
+
+              media.onerror = () => {
+                cleanup();
+                resolve([index, null]);
+              };
+            })
+        )
+      );
+
+      if (!isCancelled) {
+        setResolvedDurations(Object.fromEntries(durationEntries));
+      }
+    };
+
+    loadDurations();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [course]);
+
+  const getDurationLabel = (index) => {
+    const resolvedMinutes = resolvedDurations[index];
+
+    if (typeof resolvedMinutes === 'number') {
+      return `${resolvedMinutes} min`;
+    }
+
+    const sourceType = getVideoSource(course?.videos?.[index]).type;
+    if (sourceType === 'drive') {
+      return 'Duration unavailable';
+    }
+
+    return 'Loading duration...';
+  };
+
   const allVideosCompleted = enrollment?.completedVideos?.length === course?.videos?.length;
 
-  // LOADING STATE
   if (loading) {
     return (
       <main className="container page">
@@ -177,19 +220,18 @@ const CoursePage = () => {
     );
   }
 
-  // ERROR STATE
   if (error) {
     return (
       <main className="container page">
         <div className="card" style={{ padding: '3rem', textAlign: 'center', border: '2px solid #ef4444' }}>
-          <h2 style={{ color: '#dc2626', marginBottom: '1rem' }}>❌ Error Loading Course</h2>
+          <h2 style={{ color: '#dc2626', marginBottom: '1rem' }}>Error Loading Course</h2>
           <p style={{ marginBottom: '2rem' }}>{error}</p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
             <button onClick={() => navigate('/dashboard')} className="primary-btn">
-              ← Back to Dashboard
+              Back to Dashboard
             </button>
             <button onClick={fetchCourse} className="ghost-btn">
-              🔄 Try Again
+              Try Again
             </button>
           </div>
         </div>
@@ -197,28 +239,22 @@ const CoursePage = () => {
     );
   }
 
-  // COURSE NOT FOUND
   if (!course) {
     return (
       <main className="container page">
         <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{margin: '0 auto 1rem', opacity: 0.6}}>
-            <path d="M4 19.5C4 18.837 4.26339 18.2011 4.73223 17.7322C5.20107 17.2634 5.83696 17 6.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M6.5 2H20V22H6.5C5.83696 22 5.20107 21.7366 4.73223 21.2678C4.26339 20.7989 4 20.163 4 19.5V4.5C4 3.83696 4.26339 3.20107 4.73223 2.73223C5.20107 2.26339 5.83696 2 6.5 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
           <h2 style={{ marginBottom: '1rem' }}>Course Not Found</h2>
           <p className="muted" style={{ marginBottom: '2rem' }}>
             The course you're looking for doesn't exist or has been removed.
           </p>
           <button onClick={() => navigate('/dashboard')} className="primary-btn">
-            ← Back to Dashboard
+            Back to Dashboard
           </button>
         </div>
       </main>
     );
   }
 
-  // NO VIDEOS AVAILABLE
   if (!course.videos || course.videos.length === 0) {
     return (
       <main className="container page">
@@ -229,28 +265,20 @@ const CoursePage = () => {
             <span className="chip">{course.category}</span>
             <span className="chip">{course.level}</span>
           </div>
-          <div style={{ 
-            marginTop: '2rem', 
-            padding: '2rem', 
-            background: '#fef3c7', 
-            borderRadius: '12px',
-            textAlign: 'center'
-          }}>
-            <h3 style={{ marginBottom: '1rem' }}>⚠️ No Videos Available</h3>
+          <div style={{ marginTop: '2rem', padding: '2rem', background: '#fef3c7', borderRadius: '12px', textAlign: 'center' }}>
+            <h3 style={{ marginBottom: '1rem' }}>No Videos Available</h3>
             <p className="muted">
               This course doesn't have any video content yet. Please check back later or contact the instructor.
             </p>
           </div>
           <button onClick={() => navigate('/dashboard')} className="ghost-btn" style={{ marginTop: '2rem' }}>
-            ← Back to Dashboard
+            Back to Dashboard
           </button>
         </div>
       </main>
     );
   }
 
-  // ACCESS DENIED (for regular users without enrollment)
-  // Admins and instructors can bypass this to view content immediately
   if (!enrollment && user?.role !== 'admin' && user?.role !== 'instructor') {
     return (
       <main className="container page">
@@ -261,15 +289,9 @@ const CoursePage = () => {
             <span className="chip">{course.category}</span>
             <span className="chip">{course.level}</span>
           </div>
-          
-          <div style={{ 
-            marginTop: '2rem', 
-            padding: '2rem', 
-            background: '#f0f9ff', 
-            borderRadius: '12px',
-            textAlign: 'center'
-          }}>
-            <h3 style={{ marginBottom: '1rem' }}>🎓 Enroll to Start Learning</h3>
+
+          <div style={{ marginTop: '2rem', padding: '2rem', background: '#f0f9ff', borderRadius: '12px', textAlign: 'center' }}>
+            <h3 style={{ marginBottom: '1rem' }}>Enroll to Start Learning</h3>
             <p className="muted" style={{ marginBottom: '2rem' }}>
               Enroll in this course to access {course.videos.length} video lessons and assessments.
             </p>
@@ -277,7 +299,7 @@ const CoursePage = () => {
               Enroll Now
             </button>
           </div>
-          
+
           {message && (
             <div style={{ marginTop: '1rem', padding: '1rem', background: '#d1fae5', borderRadius: '8px' }}>
               {message}
@@ -288,41 +310,29 @@ const CoursePage = () => {
     );
   }
 
-  // MAIN COURSE PAGE - TWO COLUMN LAYOUT
   const currentVideo = course.videos[currentVideoIndex];
-  const videoUrl = getVideoUrl(currentVideo);
+  const currentSource = getVideoSource(currentVideo);
   const completedCount = enrollment?.completedVideos?.length || 0;
   const progressPercent = enrollment?.progressPercent || 0;
 
   return (
     <main className="container page">
-      {/* Success Message */}
       {message && (
-        <div style={{ 
-          padding: '1rem', 
-          background: '#d1fae5', 
-          borderRadius: '8px', 
-          marginBottom: '1rem',
-          textAlign: 'center'
-        }}>
+        <div style={{ padding: '1rem', background: '#d1fae5', borderRadius: '8px', marginBottom: '1rem', textAlign: 'center' }}>
           {message}
         </div>
       )}
 
-      {/* Course Header */}
       <div className="card" style={{ marginBottom: '1.5rem', padding: '1.5rem' }}>
         <h1 style={{ marginBottom: '0.5rem' }}>{course.title}</h1>
         <p className="muted">{course.description}</p>
         <div className="meta-row" style={{ marginTop: '1rem' }}>
           <span className="chip">{course.category}</span>
           <span className="chip">{course.level}</span>
-          <span>📹 {course.videos.length} videos</span>
-          {course.quizQuestions?.length > 0 && (
-            <span>📝 {course.quizQuestions.length} quiz questions</span>
-          )}
+          <span>{course.videos.length} videos</span>
+          {course.quizQuestions?.length > 0 && <span>{course.quizQuestions.length} quiz questions</span>}
         </div>
-        
-        {/* Progress Bar */}
+
         {enrollment && (
           <div style={{ marginTop: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
@@ -333,99 +343,81 @@ const CoursePage = () => {
                 {progressPercent}%
               </span>
             </div>
-            <div style={{ 
-              background: '#e5e7eb', 
-              borderRadius: '999px', 
-              height: '8px', 
-              overflow: 'hidden' 
-            }}>
-              <div style={{ 
-                background: 'linear-gradient(90deg, var(--brand), var(--accent))', 
-                height: '100%', 
-                width: `${progressPercent}%`,
-                transition: 'width 0.3s ease'
-              }} />
+            <div style={{ background: '#e5e7eb', borderRadius: '999px', height: '8px', overflow: 'hidden' }}>
+              <div
+                style={{
+                  background: 'linear-gradient(90deg, var(--brand), var(--accent))',
+                  height: '100%',
+                  width: `${progressPercent}%`,
+                  transition: 'width 0.3s ease'
+                }}
+              />
             </div>
           </div>
         )}
       </div>
 
-      {/* Two Column Layout */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: '2fr 1fr', 
-        gap: '1.5rem',
-        alignItems: 'start'
-      }}>
-        {/* LEFT SIDE - Video Player and Playlist */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
         <div>
-          {/* Video Player */}
           <div className="card" style={{ padding: '0', overflow: 'hidden', marginBottom: '1.5rem' }}>
-            {videoUrl ? (
+            {currentSource.type === 'video' ? (
               <video
-                key={videoUrl}
+                key={currentSource.src}
                 controls
                 preload="metadata"
-                poster={currentVideo.thumbnailUrl || undefined}
+                poster={currentVideo.thumbnailUrl || course.thumbnail || undefined}
                 style={{ width: '100%', aspectRatio: '16/9', background: '#000' }}
                 onEnded={handleVideoEnd}
-                src={videoUrl}
+                src={currentSource.src}
               >
                 Your browser does not support the video tag.
               </video>
+            ) : currentSource.type === 'drive' ? (
+              <iframe
+                key={currentSource.src}
+                src={currentSource.src}
+                title={currentVideo.title}
+                style={{ width: '100%', aspectRatio: '16/9', border: 0, background: '#000' }}
+                allow="autoplay"
+              />
             ) : (
-              <div style={{ 
-                width: '100%', 
-                aspectRatio: '16/9', 
-                background: '#1f2937',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#9ca3af'
-              }}>
+              <div style={{ width: '100%', aspectRatio: '16/9', background: '#1f2937', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>
                 <div style={{ textAlign: 'center', padding: '2rem' }}>
                   <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📹</div>
                   <div>Video not available</div>
                 </div>
               </div>
             )}
-            
-            {/* Video Info */}
+
             <div style={{ padding: '1.5rem' }}>
               <h3 style={{ marginBottom: '0.5rem' }}>
                 {currentVideoIndex + 1}. {currentVideo.title}
               </h3>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                <span className="muted">⏱️ {currentVideo.durationMinutes || 0} minutes</span>
+                <span className="muted">{getDurationLabel(currentVideoIndex)}</span>
                 {enrollment?.completedVideos?.includes(currentVideoIndex) && (
-                  <span style={{ color: '#10b981', fontWeight: '600' }}>✅ Completed</span>
+                  <span style={{ color: '#10b981', fontWeight: '600' }}>Completed</span>
                 )}
               </div>
-              
-              {/* Mark as Complete Button */}
+
               {(!enrollment || !enrollment.completedVideos?.includes(currentVideoIndex)) && (
-                <button 
-                  onClick={() => markVideoCompleted(currentVideoIndex)}
-                  className="primary-btn"
-                  style={{ marginTop: '1rem' }}
-                >
-                  ✅ Mark as Completed
+                <button onClick={() => markVideoCompleted(currentVideoIndex)} className="primary-btn" style={{ marginTop: '1rem' }}>
+                  Mark as Completed
                 </button>
               )}
             </div>
           </div>
 
-          {/* Video Playlist */}
           <div className="card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ marginBottom: '1rem' }}>📹 Course Videos</h3>
+            <h3 style={{ marginBottom: '1rem' }}>Course Videos</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {course.videos.map((video, index) => {
                 const isCompleted = enrollment?.completedVideos?.includes(index);
                 const isCurrent = index === currentVideoIndex;
-                
+
                 return (
                   <button
-                    key={index}
+                    key={`${video.title}-${index}`}
                     onClick={() => setCurrentVideoIndex(index)}
                     style={{
                       padding: '1rem',
@@ -438,20 +430,44 @@ const CoursePage = () => {
                     }}
                     className="video-playlist-item"
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <span style={{ 
-                        fontSize: '1.2rem',
-                        minWidth: '24px'
-                      }}>
-                        {isCompleted ? '✅' : isCurrent ? '▶️' : '⭕'}
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '24px minmax(0, 1fr)',
+                        alignItems: 'center',
+                        gap: '0.75rem'
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: '1.2rem',
+                          minWidth: '24px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        {isCompleted ? '✓' : isCurrent ? '▶' : '○'}
                       </span>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: isCurrent ? '600' : '500' }}>
+                      <div
+                        style={{
+                          display: 'grid',
+                          gap: '0.25rem',
+                          minWidth: 0
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontWeight: isCurrent ? '600' : '500',
+                            lineHeight: '1.4',
+                            wordBreak: 'break-word'
+                          }}
+                        >
                           {index + 1}. {video.title}
                         </div>
-                        <div className="muted" style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                          ⏱️ {video.durationMinutes || 0} min
-                        </div>
+                        <small className="muted" style={{ fontSize: '0.85rem' }}>
+                          {getDurationLabel(index)}
+                        </small>
                       </div>
                     </div>
                   </button>
@@ -461,61 +477,34 @@ const CoursePage = () => {
           </div>
         </div>
 
-        {/* RIGHT SIDE - Course Info and Assessment */}
         <div>
-          {/* Assessment Section */}
           {course.quizQuestions?.length > 0 && (
             <div className="card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
-              <h3 style={{ marginBottom: '1rem' }}>📝 Course Assessment</h3>
+              <h3 style={{ marginBottom: '1rem' }}>Course Assessment</h3>
               <p className="muted" style={{ marginBottom: '1rem' }}>
                 Test your knowledge with {course.quizQuestions.length} quiz questions.
               </p>
-              
+
               {enrollment?.quizSubmittedAt ? (
                 <div>
-                  <div style={{ 
-                    padding: '1rem', 
-                    background: '#d1fae5', 
-                    borderRadius: '8px',
-                    marginBottom: '1rem'
-                  }}>
-                    <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>
-                      ✅ Assessment Completed
-                    </div>
+                  <div style={{ padding: '1rem', background: '#d1fae5', borderRadius: '8px', marginBottom: '1rem' }}>
+                    <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>Assessment Completed</div>
                     <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--brand)' }}>
                       Score: {enrollment.quizScore}%
                     </div>
                   </div>
-                  <Link 
-                    to={`/courses/${id}/assessment`}
-                    className="ghost-btn"
-                    style={{ width: '100%', textAlign: 'center' }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{marginRight: '0.5rem', display: 'inline-block', verticalAlign: 'middle'}}>
-                      <path d="M3 3V8H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M21 21V16H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M20.49 9C20.0295 7.52746 19.1956 6.20521 18.0667 5.16185C16.9378 4.11848 15.5544 3.39005 14.0541 3.05132C12.5538 2.71259 10.9921 2.77572 9.52539 3.23424C8.05867 3.69276 6.73731 4.53119 5.69 5.66L3 8M21 16L18.31 18.34C17.2627 19.4688 15.9413 20.3072 14.4746 20.7658C13.0079 21.2243 11.4462 21.2874 9.94589 20.9487C8.44558 20.61 7.06222 19.8815 5.93333 18.8382C4.80444 17.7948 3.97053 16.4725 3.51 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
+                  <Link to={`/courses/${id}/assessment`} className="ghost-btn" style={{ width: '100%', textAlign: 'center' }}>
                     View Results
                   </Link>
                 </div>
               ) : (
                 <div>
                   {allVideosCompleted ? (
-                    <Link 
-                      to={`/courses/${id}/assessment`}
-                      className="primary-btn"
-                      style={{ width: '100%', textAlign: 'center' }}
-                    >
-                      🚀 Start Assessment
+                    <Link to={`/courses/${id}/assessment`} className="primary-btn" style={{ width: '100%', textAlign: 'center' }}>
+                      Start Assessment
                     </Link>
                   ) : (
-                    <div style={{ 
-                      padding: '1rem', 
-                      background: '#fef3c7', 
-                      borderRadius: '8px',
-                      textAlign: 'center'
-                    }}>
+                    <div style={{ padding: '1rem', background: '#fef3c7', borderRadius: '8px', textAlign: 'center' }}>
                       <p style={{ fontSize: '0.9rem' }}>
                         Complete all {course.videos.length} videos to unlock the assessment
                       </p>
@@ -529,16 +518,8 @@ const CoursePage = () => {
             </div>
           )}
 
-          {/* Course Stats */}
           <div className="card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 3V8H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M21 21V16H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M20.49 9C20.0295 7.52746 19.1956 6.20521 18.0667 5.16185C16.9378 4.11848 15.5544 3.39005 14.0541 3.05132C12.5538 2.71259 10.9921 2.77572 9.52539 3.23424C8.05867 3.69276 6.73731 4.53119 5.69 5.66L3 8M21 16L18.31 18.34C17.2627 19.4688 15.9413 20.3072 14.4746 20.7658C13.0079 21.2243 11.4462 21.2874 9.94589 20.9487C8.44558 20.61 7.06222 19.8815 5.93333 18.8382C4.80444 17.7948 3.97053 16.4725 3.51 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Your Progress
-            </h3>
+            <h3 style={{ marginBottom: '1rem' }}>Your Progress</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <div className="muted" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
@@ -548,7 +529,7 @@ const CoursePage = () => {
                   {completedCount}/{course.videos.length}
                 </div>
               </div>
-              
+
               <div>
                 <div className="muted" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
                   Overall Progress
@@ -557,7 +538,7 @@ const CoursePage = () => {
                   {progressPercent}%
                 </div>
               </div>
-              
+
               {enrollment?.quizScore > 0 && (
                 <div>
                   <div className="muted" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
@@ -571,13 +552,8 @@ const CoursePage = () => {
             </div>
           </div>
 
-          {/* Navigation */}
-          <button 
-            onClick={() => navigate('/dashboard')}
-            className="ghost-btn"
-            style={{ width: '100%', marginTop: '1rem' }}
-          >
-            ← Back to Dashboard
+          <button onClick={() => navigate('/dashboard')} className="ghost-btn" style={{ width: '100%', marginTop: '1rem' }}>
+            Back to Dashboard
           </button>
         </div>
       </div>

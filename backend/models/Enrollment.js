@@ -25,6 +25,7 @@ const enrollmentSchema = new mongoose.Schema(
     assessmentResults: { type: [assessmentResultSchema], default: [] },
     
     quizScore: { type: Number, default: 0 },
+    quizAttempts: { type: Number, default: 0 },
     quizSubmittedAt: { type: Date },
     progressPercent: { type: Number, default: 0 },
     completedAt: { type: Date },

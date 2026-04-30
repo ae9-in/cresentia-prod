@@ -386,7 +386,7 @@ const AssessmentPage = () => {
                 padding: '0.75rem 0',
                 color: '#e5e7eb'
               }}>
-                <strong style={{ color: '#06b6d4' }}>Attempts:</strong> Unlimited
+                <strong style={{ color: '#06b6d4' }}>Attempts:</strong> {enrollment?.quizAttempts || 0}
               </li>
             </ul>
           </div>
