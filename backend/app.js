@@ -59,7 +59,8 @@ app.use(async (req, res, next) => {
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://frontend-sepia-pi-54.vercel.app'
+  'https://frontend-sepia-pi-54.vercel.app',
+  'https://cresentia-prod-fro.vercel.app'
 ];
 
 const corsOptions = {
@@ -67,7 +68,9 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    const isAllowed = allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app');
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
       callback(null, true); // Allow all for now
